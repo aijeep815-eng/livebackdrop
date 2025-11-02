@@ -1,10 +1,11 @@
-# LiveBackdrop
+# LiveBackdrop v2 (Multi-language)
 
-AI-powered virtual background generator for live streaming.
+- Next.js 14
+- i18n: EN / 中文 / ES (via next.config i18n + locale links)
+- Basic pages: Home, Pricing, About
+- Upload & preview image (client-side)
+- SEO meta tags in _document
+- Directories ready: components/, pages/api/, public/images/
 
-## Features
-- Upload an image
-- Preview custom AI-generated background
-- Designed for streamers and creators
-
-Deployed on Vercel.
+## Deploy
+Import this repo on Vercel and Deploy. No env vars needed for this demo.
