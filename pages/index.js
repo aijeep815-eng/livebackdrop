@@ -1,34 +1,47 @@
-import { useState } from 'react'
 import Head from 'next/head'
-import { useRouter } from 'next/router'
-import Nav from '../components/Nav'
-import Footer from '../components/Footer'
+import Nav from '../src/components/Nav'
 
-export default function Home(){
-  const [preview, setPreview] = useState(null)
-  const router = useRouter()
-  const { locale } = router
-  const tr = {
-    en: { title: 'Create AI Virtual Backgrounds', upload: 'Upload Image', preview: 'Preview' },
-    zh: { title: '创建 AI 虚拟背景', upload: '上传图片', preview: '预览' },
-    es: { title: 'Crea Fondos Virtuales AI', upload: 'Subir Imagen', preview: 'Vista Previa' }
-  }[locale || 'en']
-  function onFile(e){
-    const f = e.target.files?.[0]
-    if(!f) return
-    const url = URL.createObjectURL(f)
-    setPreview(url)
-  }
+export default function Home() {
   return (
-    <div className="wrap">
-      <Head><title>LiveBackdrop</title></Head>
-      <Nav />
-      <main className="container">
-        <h1>{tr.title}</h1>
-        <label className="btn">{tr.upload}<input type="file" accept="image/*" onChange={onFile} hidden /></label>
-        <div className="preview">{preview ? <img src={preview} alt="preview" /> : <div className="placeholder">{tr.preview}</div>}</div>
-      </main>
-      <Footer />
-    </div>
+    <>
+      <Head>
+        <title>Live Backdrop – AI Virtual Backgrounds</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Upload or generate stunning virtual backgrounds for livestreams and video calls." />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+
+      <div className="page">
+        <Nav />
+
+        <header className="hero">
+          <div className="hero__inner">
+            <h1>Live Backdrop</h1>
+            <p>Create, upload, and preview virtual backgrounds in seconds.</p>
+            <div className="cta">
+              <a className="btn btn--primary" href="/upload">Get Started</a>
+              <a className="btn btn--ghost" href="/pricing">Pricing</a>
+            </div>
+          </div>
+        </header>
+
+        <section className="features">
+          <div className="feature">
+            <h3>Fast Preview</h3>
+            <p>Upload and see your backdrop instantly on a sample camera frame.</p>
+          </div>
+          <div className="feature">
+            <h3>AI Generation</h3>
+            <p>Type a prompt and let our AI design a crisp, studio‑ready background.</p>
+          </div>
+          <div className="feature">
+            <h3>Safe & Private</h3>
+            <p>Your files are processed securely and can be removed anytime.</p>
+          </div>
+        </section>
+
+        <footer className="footer">© {new Date().getFullYear()} LiveBackdrop</footer>
+      </div>
+    </>
   )
 }
