@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useSession, signIn, signOut } from 'next-auth/react'
 
 export default function Nav() {
   const [open, setOpen] = useState(false)
+  const { data: session } = useSession()
 
   return (
     <nav className="nav">
@@ -24,7 +26,14 @@ export default function Nav() {
             </ul>
           </li>
           <li><a href="/pricing">Pricing</a></li>
-          <li><a href="/account">Account</a></li>
+          {session ? (
+            <>
+              <li><a href="/account">Dashboard</a></li>
+              <li><button onClick={()=>signOut({ callbackUrl: '/' })} className="btn btn--ghost" style={{padding:'6px 10px'}}>Logout</button></li>
+            </>
+          ) : (
+            <li><button onClick={()=>signIn()} className="btn btn--ghost" style={{padding:'6px 10px'}}>Login</button></li>
+          )}
         </ul>
       </div>
     </nav>
