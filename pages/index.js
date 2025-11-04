@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import SEOHead from '../components/SEOHead';
-import '../styles/home.css';
 
 export default function Home() {
   return (
