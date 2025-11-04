@@ -1,21 +1,15 @@
-import Head from 'next/head';
 import Link from 'next/link';
+import SEOHead from '../components/SEOHead';
+import '../styles/home.css';
 
 export default function Home() {
   return (
     <>
-      <Head>
-        <title>LiveBackdrop | AI Virtual Background Generator for Zoom & Streaming</title>
-        <meta name="description" content="Generate stunning virtual backgrounds for Zoom and live streams using AI. Create professional backdrops instantly with LiveBackdrop." />
-        <meta name="keywords" content="AI virtual background generator, Zoom background maker, AI backdrop creator, live streaming background, LiveBackdrop" />
-        <link rel="canonical" href="https://www.livebackdrop.com/" />
-        <meta property="og:title" content="LiveBackdrop - AI Virtual Background Generator" />
-        <meta property="og:description" content="Create AI-generated backgrounds for Zoom, YouTube, and streaming in seconds." />
-        <meta property="og:image" content="/og-image.jpg" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.livebackdrop.com/" />
-      </Head>
-
+      <SEOHead
+        title="Home"
+        description="Generate AI-powered live backgrounds for Zoom, streaming, and virtual studios with LiveBackdrop."
+        keywords="AI virtual background generator, live streaming backdrop, Zoom background, AI photo studio, virtual office background"
+      />
       <main className="home-container">
         <section className="hero">
           <h1>Create Stunning Virtual Backgrounds with AI</h1>
