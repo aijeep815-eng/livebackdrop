@@ -1,47 +1,59 @@
-import Head from 'next/head'
-import Nav from '../src/components/Nav'
+import Head from 'next/head';
+import Link from 'next/link';
+import '../styles/home.css';
 
 export default function Home() {
   return (
     <>
       <Head>
-        <title>Live Backdrop – AI Virtual Backgrounds</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Upload or generate stunning virtual backgrounds for livestreams and video calls." />
-        <link rel="icon" href="/favicon.ico" />
+        <title>LiveBackdrop | AI Virtual Background Generator for Zoom & Streaming</title>
+        <meta name="description" content="Generate stunning virtual backgrounds for Zoom and live streams using AI. Create professional backdrops instantly with LiveBackdrop." />
+        <meta name="keywords" content="AI virtual background generator, Zoom background maker, AI backdrop creator, live streaming background, LiveBackdrop" />
+        <link rel="canonical" href="https://www.livebackdrop.com/" />
+        <meta property="og:title" content="LiveBackdrop - AI Virtual Background Generator" />
+        <meta property="og:description" content="Create AI-generated backgrounds for Zoom, YouTube, and streaming in seconds." />
+        <meta property="og:image" content="/og-image.jpg" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.livebackdrop.com/" />
       </Head>
 
-      <div className="page">
-        <Nav />
-
-        <header className="hero">
-          <div className="hero__inner">
-            <h1>Live Backdrop</h1>
-            <p>Create, upload, and preview virtual backgrounds in seconds.</p>
-            <div className="cta">
-              <a className="btn btn--primary" href="/upload">Get Started</a>
-              <a className="btn btn--ghost" href="/pricing">Pricing</a>
-            </div>
-          </div>
-        </header>
-
-        <section className="features">
-          <div className="feature">
-            <h3>Fast Preview</h3>
-            <p>Upload and see your backdrop instantly on a sample camera frame.</p>
-          </div>
-          <div className="feature">
-            <h3>AI Generation</h3>
-            <p>Type a prompt and let our AI design a crisp, studio‑ready background.</p>
-          </div>
-          <div className="feature">
-            <h3>Safe & Private</h3>
-            <p>Your files are processed securely and can be removed anytime.</p>
+      <main className="home-container">
+        <section className="hero">
+          <h1>Create Stunning Virtual Backgrounds with AI</h1>
+          <p>Turn your ideas into professional live backdrops for Zoom and streaming.</p>
+          <div className="buttons">
+            <Link href="/generate" className="btn-primary">Generate Now</Link>
+            <Link href="/about" className="btn-secondary">Learn More</Link>
           </div>
         </section>
 
-        <footer className="footer">© {new Date().getFullYear()} LiveBackdrop</footer>
-      </div>
+        <section className="features">
+          <div className="feature">
+            <h3>🧠 Smart AI Engine</h3>
+            <p>Generate unique backgrounds based on your prompt in seconds.</p>
+          </div>
+          <div className="feature">
+            <h3>🎥 Perfect for Streaming</h3>
+            <p>Compatible with OBS, Zoom, StreamYard and more.</p>
+          </div>
+          <div className="feature">
+            <h3>🎨 Customizable Styles</h3>
+            <p>Choose lighting, color tone, and mood to fit your brand.</p>
+          </div>
+        </section>
+
+        <section className="seo-text">
+          <p>
+            LiveBackdrop is an AI virtual background generator that helps creators, professionals, and streamers design realistic backdrops for live meetings, Zoom calls, and videos.
+            Our AI background tool automatically generates HD backdrops that perfectly match your theme — whether it’s an office, studio, or natural scenery.
+            Start creating your custom AI background today.
+          </p>
+        </section>
+      </main>
+
+      <footer className="footer">
+        <p>© 2025 LiveBackdrop | All rights reserved.</p>
+      </footer>
     </>
-  )
+  );
 }
