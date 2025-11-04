@@ -1,13 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   i18n: {
-    locales: ['en', 'zh', 'es'], // Supported languages
-    defaultLocale: 'en',         // Default to English
-    localeDetection: true,       // Automatically detect browser language
+    locales: ['en', 'zh', 'es'],
+    defaultLocale: 'en',
+    localeDetection: true,
   },
+  output: 'standalone', // Ensure same runtime for all locales
+  trailingSlash: false, // Avoid /zh/ redirect flashes
   reactStrictMode: true,
   images: {
-    domains: ['oaidalleapiprodscus.blob.core.windows.net'], // Allow AI images
+    domains: ['oaidalleapiprodscus.blob.core.windows.net'],
   },
 };
 

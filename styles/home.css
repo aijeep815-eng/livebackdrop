@@ -3,8 +3,19 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: #f6f9fc;
   color: #1a1a1a;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Fade animation for locale switching */
+body.fade-in {
+  animation: fadeIn 0.25s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Existing layout styles preserved */
 .home-container {
   text-align: center;
   padding: 80px 20px;
