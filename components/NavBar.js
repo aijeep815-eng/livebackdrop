@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useState } from 'react';
+import LanguageSwitcher from './LanguageSwitcher';
 import styles from '../styles/navbar.module.css';
 
 export default function NavBar() {
@@ -33,13 +34,7 @@ export default function NavBar() {
           <Link href="/auth/register" className={styles.cta}>Get Started</Link>
         </nav>
 
-        <div className={styles.lang}>
-          <Link href="/en" className={styles.langLink}>EN</Link>
-          <span className={styles.langSep}>/</span>
-          <Link href="/zh" className={styles.langLink}>中文</Link>
-          <span className={styles.langSep}>/</span>
-          <Link href="/es" className={styles.langLink}>ES</Link>
-        </div>
+        <LanguageSwitcher />
       </div>
     </header>
   );
