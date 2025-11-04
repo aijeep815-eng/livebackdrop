@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useSession, signIn } from 'next-auth/react';
+import SEOHead from '../components/SEOHead';
 import styles from '../styles/generate.module.css';
 
 export default function GeneratePage() {
@@ -26,9 +27,7 @@ export default function GeneratePage() {
         body: JSON.stringify({ prompt, size }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data?.message || 'Generation failed.');
-      }
+      if (!res.ok) throw new Error(data?.message || 'Generation failed.');
       setImg(data.image);
     } catch (err) {
       setError(err.message);
@@ -54,6 +53,11 @@ export default function GeneratePage() {
   if (!session) {
     return (
       <div className={styles.container}>
+        <SEOHead
+          title="AI Background Generator"
+          description="Generate beautiful AI-powered virtual backgrounds for Zoom, streaming, and video meetings with LiveBackdrop."
+          keywords="AI background generator, virtual background, live streaming, Zoom backdrop, AI backdrop maker"
+        />
         <div className={styles.header}>
           <h1>AI Background Generator</h1>
           <p>Please log in to generate backgrounds.</p>
@@ -67,9 +71,15 @@ export default function GeneratePage() {
 
   return (
     <div className={styles.container}>
+      <SEOHead
+        title="AI Background Generator"
+        description="Use AI to generate professional studio-quality virtual backdrops for Zoom, live streaming, and video production."
+        keywords="AI background generator, virtual background, live streaming, Zoom backdrop, AI backdrop maker"
+      />
+
       <div className={styles.header}>
         <h1>AI Background Generator</h1>
-        <p>Turn prompts into studio‑ready virtual backdrops.</p>
+        <p>Turn your ideas into studio‑ready virtual backdrops.</p>
       </div>
 
       <div className={styles.card}>
