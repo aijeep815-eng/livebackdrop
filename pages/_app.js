@@ -1,13 +1,6 @@
-import '../styles/global.css';
-import '../styles/navbar.module.css';
+import '../styles/layout.css';
 import '../styles/home.css';
-import NavBar from '../components/NavBar';
 
-export default function MyApp({ Component, pageProps }) {
-  return (
-    <>
-      <NavBar />
-      <Component {...pageProps} />
-    </>
-  );
+export default function App({ Component, pageProps }) {
+  return <Component {...pageProps} />;
 }
