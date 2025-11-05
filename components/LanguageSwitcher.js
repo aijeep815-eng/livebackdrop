@@ -7,10 +7,11 @@ export default function LanguageSwitcher() {
 
   const changeLanguage = async (newLocale) => {
     if (newLocale === locale) return;
+    // Use client navigation without scroll; shallow keeps state when possible
     await router.push({ pathname, query }, asPath, {
       locale: newLocale,
       scroll: false,
-      shallow: true
+      shallow: true,
     });
   };
 

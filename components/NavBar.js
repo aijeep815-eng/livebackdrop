@@ -5,12 +5,14 @@ import styles from '../styles/navbar.module.css';
 
 export default function NavBar() {
   const [open, setOpen] = useState(false);
+
   return (
     <header className={styles.header}>
       <div className={styles.wrap}>
         <div className={styles.brand}>
           <Link href="/" className={styles.logo}>LiveBackdrop</Link>
         </div>
+
         <nav className={styles.nav}>
           <div
             className={styles.navItem}
@@ -26,10 +28,12 @@ export default function NavBar() {
               </div>
             )}
           </div>
+
           <Link href="/generate" className={styles.navLink}>Generate</Link>
           <Link href="/auth/login" className={styles.navLink}>Login</Link>
           <Link href="/auth/register" className={styles.cta}>Get Started</Link>
         </nav>
+
         <LanguageSwitcher />
       </div>
     </header>

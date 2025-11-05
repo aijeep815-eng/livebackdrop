@@ -3,7 +3,8 @@ const nextConfig = {
   i18n: {
     locales: ['en', 'zh', 'es'],
     defaultLocale: 'en',
-    localeDetection: false, // disable auto redirect to /zh
+    // Turn off browser-language redirects that cause full-page reloads.
+    localeDetection: false,
   },
   reactStrictMode: true,
 };
