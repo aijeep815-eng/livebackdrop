@@ -18,6 +18,24 @@ export default function Home() {
         <Link href="/generate" className="homeButton">
           Get Started
         </Link>
+
+        <section className="featuresSection">
+          <div className="featureCard">
+            <div className="featureIcon">🤖</div>
+            <h3 className="featureTitle">AI Generate</h3>
+            <p className="featureDesc">Instantly create professional virtual backgrounds using advanced AI.</p>
+          </div>
+          <div className="featureCard">
+            <div className="featureIcon">🎨</div>
+            <h3 className="featureTitle">Customize</h3>
+            <p className="featureDesc">Fine-tune lighting, colors, and composition for your perfect scene.</p>
+          </div>
+          <div className="featureCard">
+            <div className="featureIcon">💾</div>
+            <h3 className="featureTitle">Download</h3>
+            <p className="featureDesc">Save and apply your generated backgrounds with a single click.</p>
+          </div>
+        </section>
       </div>
     </Layout>
   );
