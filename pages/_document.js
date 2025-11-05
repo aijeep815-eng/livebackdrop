@@ -5,7 +5,10 @@ export default class MyDocument extends Document {
     const locale = this.props.__NEXT_DATA__?.locale || 'en';
     return (
       <Html lang={locale}>
-        <Head />
+        <Head>
+          {/* Force consistent font rendering across locales */}
+          <meta httpEquiv="x-dns-prefetch-control" content="on" />
+        </Head>
         <body>
           <Main />
           <NextScript />
