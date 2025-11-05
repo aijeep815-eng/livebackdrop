@@ -1,0 +1,33 @@
+/* === Unified Layout Centering === */
+
+html, body, #__next {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.layout {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to bottom right, #eaf3ff, #ffffff);
+  text-align: center;
+  padding: 2rem;
+}
+
+.footer {
+  text-align: center;
+  padding: 1.5rem 0;
+  color: #555;
+  background: #f8faff;
+  border-top: 1px solid #e1e8f0;
+  font-size: 0.95rem;
+}
