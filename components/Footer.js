@@ -1,7 +1,3 @@
-export default function Footer() {
-  return (
-    <footer className="footer">
-      <p>© {new Date().getFullYear()} LiveBackdrop. All rights reserved.</p>
-    </footer>
-  );
+export default function Footer(){
+  return <footer className="footer">© {new Date().getFullYear()} LiveBackdrop. All rights reserved.</footer>
 }
