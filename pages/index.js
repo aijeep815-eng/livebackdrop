@@ -31,7 +31,7 @@ export default function Home() {
       </section>
 
       {/* 功能介绍区 */}
-      <section className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto py-20 px-6 text-center">
+      <section className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto py-20 px-6 text-center justify-items-center place-items-center">
         <div>
           <Image
             src="/ai-generate.png"
