@@ -13,7 +13,7 @@ export default function Home() {
         />
       </Head>
 
-      {/* Hero 区 */}
+      {/* 顶部大标题区域 */}
       <section className="flex flex-col items-center justify-center text-center py-20 bg-gradient-to-b from-white to-blue-50">
         <h1 className="text-5xl font-extrabold text-blue-700 mb-6">
           LiveBackdrop
@@ -30,48 +30,57 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* 功能介绍区 */}
-      <section className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto py-20 px-6 text-center justify-items-center place-items-center">
-        <div>
-          <Image
-            src="/ai-generate.png"
-            alt="AI Generate"
-            width={80}
-            height={80}
-            className="mx-auto mb-4"
-          />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">AI Generate</h3>
-          <p className="text-gray-600">
-            Instantly create professional virtual backgrounds using advanced AI.
-          </p>
-        </div>
+      {/* 功能介绍区 —— 水平居中、上下对齐 */}
+      <section className="w-full flex justify-center items-center py-20 bg-white">
+        <div className="grid md:grid-cols-3 gap-12 max-w-6xl w-full px-6 text-center place-items-center">
+          {/* 卡片1 */}
+          <div className="flex flex-col items-center">
+            <Image
+              src="/ai-generate.png"
+              alt="AI Generate"
+              width={120}
+              height={120}
+              className="mb-6"
+            />
+            <h3 className="text-xl font-bold text-gray-800 mb-2">
+              AI Generate
+            </h3>
+            <p className="text-gray-600 max-w-xs">
+              Instantly create professional virtual backgrounds using advanced
+              AI.
+            </p>
+          </div>
 
-        <div>
-          <Image
-            src="/customize.png"
-            alt="Customize"
-            width={80}
-            height={80}
-            className="mx-auto mb-4"
-          />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Customize</h3>
-          <p className="text-gray-600">
-            Fine-tune lighting, colors, and composition for your perfect scene.
-          </p>
-        </div>
+          {/* 卡片2 */}
+          <div className="flex flex-col items-center">
+            <Image
+              src="/customize.png"
+              alt="Customize"
+              width={120}
+              height={120}
+              className="mb-6"
+            />
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Customize</h3>
+            <p className="text-gray-600 max-w-xs">
+              Fine-tune lighting, colors, and composition for your perfect
+              scene.
+            </p>
+          </div>
 
-        <div>
-          <Image
-            src="/download.png"
-            alt="Download"
-            width={80}
-            height={80}
-            className="mx-auto mb-4"
-          />
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Download</h3>
-          <p className="text-gray-600">
-            Save and apply your generated backgrounds with a single click.
-          </p>
+          {/* 卡片3 */}
+          <div className="flex flex-col items-center">
+            <Image
+              src="/download.png"
+              alt="Download"
+              width={120}
+              height={120}
+              className="mb-6"
+            />
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Download</h3>
+            <p className="text-gray-600 max-w-xs">
+              Save and apply your generated backgrounds with a single click.
+            </p>
+          </div>
         </div>
       </section>
     </>
