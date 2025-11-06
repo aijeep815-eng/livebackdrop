@@ -1,47 +1,42 @@
-import Head from 'next/head'
-import Nav from '../src/components/Nav'
+import Head from 'next/head';
+import Layout from '../components/Layout';
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <>
+    <Layout>
       <Head>
-        <title>Live Backdrop – AI Virtual Backgrounds</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Upload or generate stunning virtual backgrounds for livestreams and video calls." />
-        <link rel="icon" href="/favicon.ico" />
+        <title>LiveBackdrop - AI Virtual Backgrounds for Streamers</title>
+        <meta name="description" content="Generate professional virtual backgrounds with AI. Perfect for live streams, Zoom, or YouTube." />
       </Head>
 
-      <div className="page">
-        <Nav />
+      <div className="homeContainer">
+        <h1 className="homeTitle">LiveBackdrop</h1>
+        <p className="homeSubtitle">
+          Create stunning virtual backgrounds powered by AI for your live streams and meetings.
+        </p>
+        <Link href="/generate" className="homeButton">
+          Get Started
+        </Link>
 
-        <header className="hero">
-          <div className="hero__inner">
-            <h1>Live Backdrop</h1>
-            <p>Create, upload, and preview virtual backgrounds in seconds.</p>
-            <div className="cta">
-              <a className="btn btn--primary" href="/upload">Get Started</a>
-              <a className="btn btn--ghost" href="/pricing">Pricing</a>
-            </div>
+        <section className="featuresSection">
+          <div className="featureCard">
+            <div className="featureIcon">🤖</div>
+            <h3 className="featureTitle">AI Generate</h3>
+            <p className="featureDesc">Instantly create professional virtual backgrounds using advanced AI.</p>
           </div>
-        </header>
-
-        <section className="features">
-          <div className="feature">
-            <h3>Fast Preview</h3>
-            <p>Upload and see your backdrop instantly on a sample camera frame.</p>
+          <div className="featureCard">
+            <div className="featureIcon">🎨</div>
+            <h3 className="featureTitle">Customize</h3>
+            <p className="featureDesc">Fine-tune lighting, colors, and composition for your perfect scene.</p>
           </div>
-          <div className="feature">
-            <h3>AI Generation</h3>
-            <p>Type a prompt and let our AI design a crisp, studio‑ready background.</p>
-          </div>
-          <div className="feature">
-            <h3>Safe & Private</h3>
-            <p>Your files are processed securely and can be removed anytime.</p>
+          <div className="featureCard">
+            <div className="featureIcon">💾</div>
+            <h3 className="featureTitle">Download</h3>
+            <p className="featureDesc">Save and apply your generated backgrounds with a single click.</p>
           </div>
         </section>
-
-        <footer className="footer">© {new Date().getFullYear()} LiveBackdrop</footer>
       </div>
-    </>
-  )
+    </Layout>
+  );
 }

@@ -1,55 +1,56 @@
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
 
-export default function Login() {
-  const { data: session } = useSession();
-  const router = useRouter();
+export default function LoginPage() {
+  const { data: session, status } = useSession() || {};
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (session) router.replace("/");
-  }, [session, router]);
-
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    const res = await signIn("credentials", {
-      redirect: false,
-      email, password,
-      callbackUrl: "/"
+    await signIn("credentials", {
+      email,
+      password,
+      callbackUrl: "/",
     });
-    if (res?.error) setError(res.error);
-    else router.push("/");
+  };
+
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (session) {
+    return (
+      <div style={{ textAlign: "center", padding: "40px" }}>
+        <h1>Welcome, {session.user?.email}</h1>
+        <p>You are already logged in.</p>
+      </div>
+    );
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>Login</h1>
-        <form onSubmit={handleSubmit}>
-          <label>Email</label>
-          <input type="email" value={email} onChange={e=>setEmail(e.target.value)} required />
-          <label>Password</label>
-          <input type="password" value={password} onChange={e=>setPassword(e.target.value)} required />
-          {error && <p className="error">{error}</p>}
-          <button className="btn btn--primary" type="submit">Sign in</button>
-        </form>
-        <p className="muted">No account? <a href="/auth/register">Create one</a></p>
-      </div>
-      <style jsx>{`
-        .auth-page{min-height:70vh;display:grid;place-items:center;padding:40px;background:var(--page-bg)}
-        .auth-card{width:100%;max-width:420px;background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:24px}
-        h1{margin:0 0 14px}
-        form{display:grid;gap:10px}
-        label{font-weight:600}
-        input{border:1px solid #d0e3ff;border-radius:10px;padding:10px 12px;outline:none}
-        input:focus{border-color:#6fb5ff;box-shadow:0 0 0 3px rgba(63,156,255,.15)}
-        .error{color:#d34040;margin:6px 0}
-        .muted{opacity:.8;margin-top:12px}
-      `}</style>
+    <div style={{ maxWidth: "400px", margin: "80px auto", textAlign: "center" }}>
+      <h1>Login</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          style={{ display: "block", margin: "10px auto", padding: "10px", width: "100%" }}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          style={{ display: "block", margin: "10px auto", padding: "10px", width: "100%" }}
+        />
+        <button type="submit" style={{ padding: "10px 20px", marginTop: "10px" }}>Login</button>
+      </form>
     </div>
   );
 }
