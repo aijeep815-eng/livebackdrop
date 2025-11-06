@@ -68,12 +68,6 @@ export default function Home() {
             height={80}
             className="mx-auto mb-4"
           />
-<div className="flex justify-center">
-  <section className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto py-20 px-6 text-center justify-items-center place-items-center">
-    {/* 三个卡片 */}
-  </section>
-</div>
-
           <h3 className="text-xl font-bold text-gray-800 mb-2">Download</h3>
           <p className="text-gray-600">
             Save and apply your generated backgrounds with a single click.
