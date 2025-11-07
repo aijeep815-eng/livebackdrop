@@ -1,10 +1,18 @@
-import "@/styles/globals.css";
-import Layout from "@/components/Layout";
+import dynamic from 'next/dynamic';
+import '../styles/globals.css';
+
+// 动态加载 NavBar（禁用 SSR）
+const NavBar = dynamic(() => import('@/components/NavBar'), { ssr: false });
+const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 
 export default function App({ Component, pageProps }) {
   return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
+    <>
+      <NavBar />
+      <main style={{ minHeight: '80vh', padding: '2rem 1rem', backgroundColor: '#f9fafb' }}>
+        <Component {...pageProps} />
+      </main>
+      <Footer />
+    </>
   );
 }
