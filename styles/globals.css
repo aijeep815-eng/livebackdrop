@@ -1,43 +1,59 @@
-/* LiveBackdrop 全局终极层级解锁补丁 */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-html, body, #__next, main, section, header, footer, div, .hero, .content, .container {
-  position: static !important;
-  z-index: auto !important;
-  overflow: visible !important;
-  transform: none !important;
-  perspective: none !important;
-  will-change: auto !important;
+:root {
+  --primary-blue: #1e40af;
+  --light-blue: #3b82f6;
 }
 
-/* 保留字体、背景与颜色 */
-body {
+html, body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  padding: 0;
   background-color: #f9fafb;
-  color: #1f2937;
+  font-family: 'Inter', sans-serif;
 }
 
-/* 导航永远在顶层 */
-nav, .lb-nav, .navbar {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9999 !important;
+nav {
+  background-color: var(--primary-blue);
+  color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* 下拉菜单层再高一级 */
-.lb-panel, .lb-subpanel, #lb-dropdown-panel {
-  position: fixed !important;
-  z-index: 10000 !important;
-  overflow: visible !important;
+nav a {
+  color: white;
+  transition: color 0.2s ease-in-out;
 }
 
-/* 基础结构 */
-a {
+nav a:hover {
+  color: var(--light-blue);
+}
+
+.dropdown-menu {
+  background-color: white;
+  color: var(--primary-blue);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 9999;
+  border-radius: 0.5rem;
+  min-width: 12rem;
+  display: none;
+}
+
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 0.5rem 1rem;
   text-decoration: none;
-  color: inherit;
+  color: var(--primary-blue);
 }
 
-* {
-  box-sizing: border-box;
+.dropdown-menu a:hover {
+  background-color: var(--light-blue);
+  color: white;
 }
