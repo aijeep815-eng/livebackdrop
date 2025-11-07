@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import '../styles/globals.css';
 
-// 动态加载 NavBar（禁用 SSR）
+// Only use NavBar.js, remove any Nav.js reference
 const NavBar = dynamic(() => import('@/components/NavBar'), { ssr: false });
 const Footer = dynamic(() => import('@/components/Footer'), { ssr: false });
 
