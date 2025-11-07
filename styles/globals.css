@@ -1,29 +1,19 @@
-/* Global style patch for LiveBackdrop */
+/* Global z-index and overflow unlock patch for LiveBackdrop */
 
-html, body, #__next {
-  overflow: visible !important;
-  position: static !important;
-}
-
-main {
-  overflow: visible !important;
+/* Reset potential stacking contexts that block dropdowns */
+#__next, main, section, header, footer, div, .hero, .content, .container {
   position: static !important;
   z-index: auto !important;
+  overflow: visible !important;
 }
 
-/* Retain original typography and background */
+/* Keep typography and background consistent */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   background-color: #f9fafb;
   color: #1f2937;
-}
-
-/* Ensure dropdowns and floating elements display above all content */
-nav, .lb-nav, .navbar {
-  z-index: 999999 !important;
-  position: relative !important;
 }
 
 a {
@@ -33,4 +23,15 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+/* Ensure navigation always visible */
+nav.lb-nav {
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+/* Dropdown portals float above everything else */
+#lb-dropdown-panel {
+  z-index: 1100 !important;
 }
