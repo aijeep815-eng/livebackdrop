@@ -4,15 +4,11 @@ export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [sceneOpen, setSceneOpen] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
     const onResize = () => {
-      const desktop = window.matchMedia('(min-width: 768px)').matches;
-      setIsDesktop(desktop);
-      if (desktop) setIsOpen(false);
+      if (window.innerWidth >= 768) setIsOpen(false);
     };
-    onResize();
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
   }, []);
@@ -21,44 +17,31 @@ export default function NavBar() {
     <nav className="nav">
       <div className="container">
         <div className="brand">LiveBackdrop</div>
+        <div className="desktopMenu">
+          <a href="/" className="link">Home</a>
 
-        {/* Desktop menu */}
-        <div className="menu desktop">
-          <a className="link" href="/">Home</a>
-
-          <div
-            className="dropdown"
-            onMouseEnter={() => isDesktop && setAiOpen(true)}
-            onMouseLeave={() => isDesktop && setAiOpen(false)}
-          >
-            <button className="link btn" onClick={() => !isDesktop && setAiOpen(v => !v)}>
+          <div className="dropdown">
+            <button className="link" onClick={() => setAiOpen(!aiOpen)}>
               AI Tools ▾
             </button>
-
             {aiOpen && (
               <div className="panel">
-                <a className="item" href="/ai/generate">Generate Background</a>
-                <a className="item" href="/ai/upload">Upload &amp; Edit</a>
-
-                <div
-                  className="dropdown nested"
-                  onMouseEnter={() => isDesktop && setSceneOpen(true)}
-                  onMouseLeave={() => isDesktop && setSceneOpen(false)}
-                >
-                  <button className="item btn nestedBtn" onClick={() => !isDesktop && setSceneOpen(v => !v)}>
+                <a href="/ai/generate" className="item">Generate Background</a>
+                <a href="/ai/upload" className="item">Upload & Edit</a>
+                <div className="nested">
+                  <button className="item nestedBtn" onClick={() => setSceneOpen(!sceneOpen)}>
                     Scene Mode ▸
                   </button>
-
                   {sceneOpen && (
-                    <div className="panel nestedPanel">
-                      <a className="item" href="/scene/office">Office &amp; Meeting</a>
-                      <a className="item" href="/scene/streaming">Streaming &amp; Studio</a>
-                      <a className="item" href="/scene/indoor">Indoor Living</a>
-                      <a className="item" href="/scene/outdoor">Outdoor &amp; Nature</a>
-                      <a className="item" href="/scene/education">Education &amp; Presentation</a>
-                      <a className="item" href="/scene/business">Business &amp; Brand</a>
-                      <a className="item" href="/scene/creative">Creative &amp; Theme</a>
-                      <a className="item" href="/scene/custom">Custom AI Mode</a>
+                    <div className="nestedPanel">
+                      <a href="/scene/office" className="item">Office & Meeting</a>
+                      <a href="/scene/streaming" className="item">Streaming & Studio</a>
+                      <a href="/scene/indoor" className="item">Indoor Living</a>
+                      <a href="/scene/outdoor" className="item">Outdoor & Nature</a>
+                      <a href="/scene/education" className="item">Education & Presentation</a>
+                      <a href="/scene/business" className="item">Business & Brand</a>
+                      <a href="/scene/creative" className="item">Creative & Theme</a>
+                      <a href="/scene/custom" className="item">Custom AI Mode</a>
                     </div>
                   )}
                 </div>
@@ -66,168 +49,150 @@ export default function NavBar() {
             )}
           </div>
 
-          <a className="link" href="/pricing">Pricing</a>
-          <a className="link" href="/gallery">Gallery</a>
-          <a className="link" href="/about">About</a>
-          <a className="link" href="/contact">Contact</a>
+          <a href="/pricing" className="link">Pricing</a>
+          <a href="/gallery" className="link">Gallery</a>
+          <a href="/about" className="link">About</a>
+          <a href="/contact" className="link">Contact</a>
         </div>
 
-        {/* Mobile toggle */}
-        <button className="hamburger mobile" onClick={() => setIsOpen(v => !v)} aria-label="Menu">
-          ☰
-        </button>
+        <button className="hamburger" onClick={() => setIsOpen(!isOpen)}>☰</button>
       </div>
 
-      {/* Mobile menu drawer */}
       {isOpen && (
-        <div className="mobileDrawer mobile">
-          <a className="mItem" href="/">Home</a>
-
-          <button className="mItem btn" onClick={() => setAiOpen(v => !v)}>AI Tools ▾</button>
+        <div className="mobileMenu">
+          <a href="/" className="mItem">Home</a>
+          <button className="mItem" onClick={() => setAiOpen(!aiOpen)}>AI Tools ▾</button>
           {aiOpen && (
             <div className="mSub">
-              <a className="mItem" href="/ai/generate">Generate Background</a>
-              <a className="mItem" href="/ai/upload">Upload &amp; Edit</a>
-
-              <button className="mItem btn" onClick={() => setSceneOpen(v => !v)}>Scene Mode ▾</button>
+              <a href="/ai/generate" className="mItem">Generate Background</a>
+              <a href="/ai/upload" className="mItem">Upload & Edit</a>
+              <button className="mItem" onClick={() => setSceneOpen(!sceneOpen)}>Scene Mode ▾</button>
               {sceneOpen && (
                 <div className="mSub">
-                  <a className="mItem" href="/scene/office">Office &amp; Meeting</a>
-                  <a className="mItem" href="/scene/streaming">Streaming &amp; Studio</a>
-                  <a className="mItem" href="/scene/indoor">Indoor Living</a>
-                  <a className="mItem" href="/scene/outdoor">Outdoor &amp; Nature</a>
-                  <a className="mItem" href="/scene/education">Education &amp; Presentation</a>
-                  <a className="mItem" href="/scene/business">Business &amp; Brand</a>
-                  <a className="mItem" href="/scene/creative">Creative &amp; Theme</a>
-                  <a className="mItem" href="/scene/custom">Custom AI Mode</a>
+                  <a href="/scene/office" className="mItem">Office & Meeting</a>
+                  <a href="/scene/streaming" className="mItem">Streaming & Studio</a>
+                  <a href="/scene/indoor" className="mItem">Indoor Living</a>
+                  <a href="/scene/outdoor" className="mItem">Outdoor & Nature</a>
+                  <a href="/scene/education" className="mItem">Education & Presentation</a>
+                  <a href="/scene/business" className="mItem">Business & Brand</a>
+                  <a href="/scene/creative" className="mItem">Creative & Theme</a>
+                  <a href="/scene/custom" className="mItem">Custom AI Mode</a>
                 </div>
               )}
             </div>
           )}
-
-          <a className="mItem" href="/pricing">Pricing</a>
-          <a className="mItem" href="/gallery">Gallery</a>
-          <a className="mItem" href="/about">About</a>
-          <a className="mItem" href="/contact">Contact</a>
+          <a href="/pricing" className="mItem">Pricing</a>
+          <a href="/gallery" className="mItem">Gallery</a>
+          <a href="/about" className="mItem">About</a>
+          <a href="/contact" className="mItem">Contact</a>
         </div>
       )}
 
       <style jsx>{`
         .nav {
-          width: 100%;
           background: #ffffff;
           border-bottom: 1px solid #e5e7eb;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           position: sticky;
           top: 0;
           z-index: 50;
+          width: 100%;
         }
         .container {
           max-width: 1120px;
           margin: 0 auto;
-          padding: 0 16px;
           height: 64px;
+          padding: 0 16px;
           display: flex;
           align-items: center;
           justify-content: space-between;
         }
         .brand {
-          font-weight: 800;
           font-size: 22px;
+          font-weight: 800;
           color: #0f172a;
-          letter-spacing: 0.2px;
         }
-        .menu {
-          display: flex;
-          align-items: center;
+        .desktopMenu {
+          display: none;
           gap: 24px;
+          align-items: center;
           font-weight: 600;
         }
-        .link, .btn {
-          background: transparent;
-          border: 0;
-          padding: 6px 2px;
-          cursor: pointer;
+        .link {
           color: #374151;
+          background: transparent;
+          border: none;
+          cursor: pointer;
           text-decoration: none;
+          padding: 6px 8px;
+          transition: color 0.2s;
         }
-        .link:hover, .btn:hover {
-          color: #2563eb;
+        .link:hover {
+          color: #2563EB;
         }
-
-        /* Dropdown */
-        .dropdown { position: relative; }
+        .dropdown { position: relative; display: inline-block; }
         .panel {
           position: absolute;
-          top: 36px;
+          top: 38px;
           left: 0;
-          width: 240px;
-          background: #fff;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-          padding: 8px 0;
+          background: #E3ECFB;
+          border-radius: 8px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          min-width: 220px;
+          padding: 6px 0;
+          z-index: 30;
         }
         .item {
           display: block;
           padding: 10px 14px;
-          color: #374151;
+          color: #1f2937;
           text-decoration: none;
-          white-space: nowrap;
           background: transparent;
-          border: 0;
-          width: 100%;
-          text-align: left;
-          cursor: pointer;
         }
-        .item:hover { background: #f3f4f6; color: #1d4ed8; }
-
-        /* Nested dropdown */
+        .item:hover {
+          background: #d9e5fa;
+          color: #3B82F6;
+        }
         .nested { position: relative; }
-        .nestedBtn { width: 100%; text-align: left; }
         .nestedPanel {
           position: absolute;
           top: 0;
           left: 100%;
+          background: #E3ECFB;
+          border-radius: 8px;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          min-width: 220px;
           margin-left: 6px;
-          width: 280px;
-          background: #fff;
-          border: 1px solid #e5e7eb;
-          border-radius: 10px;
-          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-          padding: 8px 0;
+          padding: 6px 0;
+          z-index: 40;
         }
-
-        /* Mobile */
         .hamburger {
           background: transparent;
-          border: 0;
+          border: none;
           font-size: 22px;
-          color: #374151;
           cursor: pointer;
+          color: #374151;
         }
-        .mobileDrawer {
+        .mobileMenu {
           border-top: 1px solid #e5e7eb;
-          background: #ffffff;
+          background: #E3ECFB;
           padding: 8px 0;
         }
         .mItem {
           display: block;
           padding: 12px 16px;
-          color: #374151;
+          color: #1f2937;
           text-decoration: none;
           font-weight: 600;
         }
-        .mItem:hover { background: #f3f4f6; color: #1d4ed8; }
-        .mSub { padding-left: 8px; }
-
-        /* Visibility */
-        .desktop { display: none; }
-        .mobile { display: inline-flex; }
-
+        .mItem:hover {
+          background: #d9e5fa;
+          color: #3B82F6;
+        }
+        .mSub { padding-left: 12px; }
         @media (min-width: 768px) {
-          .desktop { display: inline-flex; }
-          .mobile { display: none; }
+          .desktopMenu { display: flex; }
+          .hamburger, .mobileMenu { display: none; }
         }
       `}</style>
     </nav>
