@@ -1,121 +1,235 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function NavBar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isAIToolsOpen, setIsAIToolsOpen] = useState(false);
-  const [isSceneModeOpen, setIsSceneModeOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [sceneOpen, setSceneOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const onResize = () => {
+      const desktop = window.matchMedia('(min-width: 768px)').matches;
+      setIsDesktop(desktop);
+      if (desktop) setIsOpen(false);
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   return (
-    <nav className="w-full bg-white border-b border-gray-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center text-2xl font-bold text-gray-800">
-            LiveBackdrop
-          </div>
+    <nav className="nav">
+      <div className="container">
+        <div className="brand">LiveBackdrop</div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-6 text-gray-700 font-medium">
-            <a href="/" className="hover:text-blue-600 transition">Home</a>
+        {/* Desktop menu */}
+        <div className="menu desktop">
+          <a className="link" href="/">Home</a>
 
-            {/* AI Tools Dropdown */}
-            <div
-              className="relative group"
-              onMouseEnter={() => setIsAIToolsOpen(true)}
-              onMouseLeave={() => setIsAIToolsOpen(false)}
-            >
-              <button className="hover:text-blue-600 transition">AI Tools ▾</button>
-              {isAIToolsOpen && (
-                <div className="absolute bg-white shadow-lg rounded-md mt-2 w-56 text-left z-10">
-                  <a href="/ai/generate" className="block px-4 py-2 hover:bg-gray-100">Generate Background</a>
-                  <a href="/ai/upload" className="block px-4 py-2 hover:bg-gray-100">Upload & Edit</a>
-
-                  {/* Scene Mode Nested */}
-                  <div
-                    className="relative group"
-                    onMouseEnter={() => setIsSceneModeOpen(true)}
-                    onMouseLeave={() => setIsSceneModeOpen(false)}
-                  >
-                    <button className="block w-full text-left px-4 py-2 hover:bg-gray-100">Scene Mode ▸</button>
-                    {isSceneModeOpen && (
-                      <div className="absolute left-full top-0 bg-white shadow-lg rounded-md mt-0 ml-1 w-64 text-left z-20">
-                        <a href="/scene/office" className="block px-4 py-2 hover:bg-gray-100">Office & Meeting</a>
-                        <a href="/scene/streaming" className="block px-4 py-2 hover:bg-gray-100">Streaming & Studio</a>
-                        <a href="/scene/indoor" className="block px-4 py-2 hover:bg-gray-100">Indoor Living</a>
-                        <a href="/scene/outdoor" className="block px-4 py-2 hover:bg-gray-100">Outdoor & Nature</a>
-                        <a href="/scene/education" className="block px-4 py-2 hover:bg-gray-100">Education & Presentation</a>
-                        <a href="/scene/business" className="block px-4 py-2 hover:bg-gray-100">Business & Brand</a>
-                        <a href="/scene/creative" className="block px-4 py-2 hover:bg-gray-100">Creative & Theme</a>
-                        <a href="/scene/custom" className="block px-4 py-2 hover:bg-gray-100">Custom AI Mode</a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <a href="/pricing" className="hover:text-blue-600 transition">Pricing</a>
-            <a href="/gallery" className="hover:text-blue-600 transition">Gallery</a>
-            <a href="/about" className="hover:text-blue-600 transition">About</a>
-            <a href="/contact" className="hover:text-blue-600 transition">Contact</a>
-          </div>
-
-          {/* Mobile Hamburger */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 focus:outline-none text-xl"
-            >
-              ☰
+          <div
+            className="dropdown"
+            onMouseEnter={() => isDesktop && setAiOpen(true)}
+            onMouseLeave={() => isDesktop && setAiOpen(false)}
+          >
+            <button className="link btn" onClick={() => !isDesktop && setAiOpen(v => !v)}>
+              AI Tools ▾
             </button>
+
+            {aiOpen && (
+              <div className="panel">
+                <a className="item" href="/ai/generate">Generate Background</a>
+                <a className="item" href="/ai/upload">Upload &amp; Edit</a>
+
+                <div
+                  className="dropdown nested"
+                  onMouseEnter={() => isDesktop && setSceneOpen(true)}
+                  onMouseLeave={() => isDesktop && setSceneOpen(false)}
+                >
+                  <button className="item btn nestedBtn" onClick={() => !isDesktop && setSceneOpen(v => !v)}>
+                    Scene Mode ▸
+                  </button>
+
+                  {sceneOpen && (
+                    <div className="panel nestedPanel">
+                      <a className="item" href="/scene/office">Office &amp; Meeting</a>
+                      <a className="item" href="/scene/streaming">Streaming &amp; Studio</a>
+                      <a className="item" href="/scene/indoor">Indoor Living</a>
+                      <a className="item" href="/scene/outdoor">Outdoor &amp; Nature</a>
+                      <a className="item" href="/scene/education">Education &amp; Presentation</a>
+                      <a className="item" href="/scene/business">Business &amp; Brand</a>
+                      <a className="item" href="/scene/creative">Creative &amp; Theme</a>
+                      <a className="item" href="/scene/custom">Custom AI Mode</a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
+
+          <a className="link" href="/pricing">Pricing</a>
+          <a className="link" href="/gallery">Gallery</a>
+          <a className="link" href="/about">About</a>
+          <a className="link" href="/contact">Contact</a>
         </div>
+
+        {/* Mobile toggle */}
+        <button className="hamburger mobile" onClick={() => setIsOpen(v => !v)} aria-label="Menu">
+          ☰
+        </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile menu drawer */}
       {isOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200">
-          <a href="/" className="block px-4 py-2 hover:bg-gray-100">Home</a>
-          <button
-            onClick={() => setIsAIToolsOpen(!isAIToolsOpen)}
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-          >
-            AI Tools ▾
-          </button>
+        <div className="mobileDrawer mobile">
+          <a className="mItem" href="/">Home</a>
 
-          {isAIToolsOpen && (
-            <div className="pl-4">
-              <a href="/ai/generate" className="block px-4 py-2 hover:bg-gray-100">Generate Background</a>
-              <a href="/ai/upload" className="block px-4 py-2 hover:bg-gray-100">Upload & Edit</a>
+          <button className="mItem btn" onClick={() => setAiOpen(v => !v)}>AI Tools ▾</button>
+          {aiOpen && (
+            <div className="mSub">
+              <a className="mItem" href="/ai/generate">Generate Background</a>
+              <a className="mItem" href="/ai/upload">Upload &amp; Edit</a>
 
-              <button
-                onClick={() => setIsSceneModeOpen(!isSceneModeOpen)}
-                className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              >
-                Scene Mode ▾
-              </button>
-
-              {isSceneModeOpen && (
-                <div className="pl-4">
-                  <a href="/scene/office" className="block px-4 py-2 hover:bg-gray-100">Office & Meeting</a>
-                  <a href="/scene/streaming" className="block px-4 py-2 hover:bg-gray-100">Streaming & Studio</a>
-                  <a href="/scene/indoor" className="block px-4 py-2 hover:bg-gray-100">Indoor Living</a>
-                  <a href="/scene/outdoor" className="block px-4 py-2 hover:bg-gray-100">Outdoor & Nature</a>
-                  <a href="/scene/education" className="block px-4 py-2 hover:bg-gray-100">Education & Presentation</a>
-                  <a href="/scene/business" className="block px-4 py-2 hover:bg-gray-100">Business & Brand</a>
-                  <a href="/scene/creative" className="block px-4 py-2 hover:bg-gray-100">Creative & Theme</a>
-                  <a href="/scene/custom" className="block px-4 py-2 hover:bg-gray-100">Custom AI Mode</a>
+              <button className="mItem btn" onClick={() => setSceneOpen(v => !v)}>Scene Mode ▾</button>
+              {sceneOpen && (
+                <div className="mSub">
+                  <a className="mItem" href="/scene/office">Office &amp; Meeting</a>
+                  <a className="mItem" href="/scene/streaming">Streaming &amp; Studio</a>
+                  <a className="mItem" href="/scene/indoor">Indoor Living</a>
+                  <a className="mItem" href="/scene/outdoor">Outdoor &amp; Nature</a>
+                  <a className="mItem" href="/scene/education">Education &amp; Presentation</a>
+                  <a className="mItem" href="/scene/business">Business &amp; Brand</a>
+                  <a className="mItem" href="/scene/creative">Creative &amp; Theme</a>
+                  <a className="mItem" href="/scene/custom">Custom AI Mode</a>
                 </div>
               )}
             </div>
           )}
 
-          <a href="/pricing" className="block px-4 py-2 hover:bg-gray-100">Pricing</a>
-          <a href="/gallery" className="block px-4 py-2 hover:bg-gray-100">Gallery</a>
-          <a href="/about" className="block px-4 py-2 hover:bg-gray-100">About</a>
-          <a href="/contact" className="block px-4 py-2 hover:bg-gray-100">Contact</a>
+          <a className="mItem" href="/pricing">Pricing</a>
+          <a className="mItem" href="/gallery">Gallery</a>
+          <a className="mItem" href="/about">About</a>
+          <a className="mItem" href="/contact">Contact</a>
         </div>
       )}
+
+      <style jsx>{`
+        .nav {
+          width: 100%;
+          background: #ffffff;
+          border-bottom: 1px solid #e5e7eb;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+          position: sticky;
+          top: 0;
+          z-index: 50;
+        }
+        .container {
+          max-width: 1120px;
+          margin: 0 auto;
+          padding: 0 16px;
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .brand {
+          font-weight: 800;
+          font-size: 22px;
+          color: #0f172a;
+          letter-spacing: 0.2px;
+        }
+        .menu {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+          font-weight: 600;
+        }
+        .link, .btn {
+          background: transparent;
+          border: 0;
+          padding: 6px 2px;
+          cursor: pointer;
+          color: #374151;
+          text-decoration: none;
+        }
+        .link:hover, .btn:hover {
+          color: #2563eb;
+        }
+
+        /* Dropdown */
+        .dropdown { position: relative; }
+        .panel {
+          position: absolute;
+          top: 36px;
+          left: 0;
+          width: 240px;
+          background: #fff;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+          padding: 8px 0;
+        }
+        .item {
+          display: block;
+          padding: 10px 14px;
+          color: #374151;
+          text-decoration: none;
+          white-space: nowrap;
+          background: transparent;
+          border: 0;
+          width: 100%;
+          text-align: left;
+          cursor: pointer;
+        }
+        .item:hover { background: #f3f4f6; color: #1d4ed8; }
+
+        /* Nested dropdown */
+        .nested { position: relative; }
+        .nestedBtn { width: 100%; text-align: left; }
+        .nestedPanel {
+          position: absolute;
+          top: 0;
+          left: 100%;
+          margin-left: 6px;
+          width: 280px;
+          background: #fff;
+          border: 1px solid #e5e7eb;
+          border-radius: 10px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+          padding: 8px 0;
+        }
+
+        /* Mobile */
+        .hamburger {
+          background: transparent;
+          border: 0;
+          font-size: 22px;
+          color: #374151;
+          cursor: pointer;
+        }
+        .mobileDrawer {
+          border-top: 1px solid #e5e7eb;
+          background: #ffffff;
+          padding: 8px 0;
+        }
+        .mItem {
+          display: block;
+          padding: 12px 16px;
+          color: #374151;
+          text-decoration: none;
+          font-weight: 600;
+        }
+        .mItem:hover { background: #f3f4f6; color: #1d4ed8; }
+        .mSub { padding-left: 8px; }
+
+        /* Visibility */
+        .desktop { display: none; }
+        .mobile { display: inline-flex; }
+
+        @media (min-width: 768px) {
+          .desktop { display: inline-flex; }
+          .mobile { display: none; }
+        }
+      `}</style>
     </nav>
   );
 }
