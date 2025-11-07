@@ -12,23 +12,23 @@ export default function Home() {
       </section>
 
       {/* 三个功能图片区 */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 items-center justify-center">
-        <div className="flex flex-col items-center">
-          <Image src="/ai-generate.jpg" alt="AI Generate" width={300} height={200} className="rounded-xl shadow-md" />
+      <section className="flex flex-wrap justify-center gap-10">
+        <div className="flex flex-col items-center max-w-sm text-center">
+          <Image src="/ai-generate.png" alt="AI Generate" width={300} height={200} className="rounded-xl shadow-lg mx-auto" />
           <h3 className="text-xl font-semibold mt-4">AI Generate</h3>
-          <p className="text-gray-500 text-center mt-2 px-4">Automatically create virtual backgrounds with AI power.</p>
+          <p className="text-gray-500 mt-2 px-4">Automatically create virtual backgrounds with AI power.</p>
         </div>
 
-        <div className="flex flex-col items-center">
-          <Image src="/customize.jpg" alt="Customize" width={300} height={200} className="rounded-xl shadow-md" />
+        <div className="flex flex-col items-center max-w-sm text-center">
+          <Image src="/customize.png" alt="Customize" width={300} height={200} className="rounded-xl shadow-lg mx-auto" />
           <h3 className="text-xl font-semibold mt-4">Customize</h3>
-          <p className="text-gray-500 text-center mt-2 px-4">Adjust lighting, colors, and style for your unique brand.</p>
+          <p className="text-gray-500 mt-2 px-4">Adjust lighting, colors, and style for your unique brand.</p>
         </div>
 
-        <div className="flex flex-col items-center">
-          <Image src="/download.jpg" alt="Download" width={300} height={200} className="rounded-xl shadow-md" />
+        <div className="flex flex-col items-center max-w-sm text-center">
+          <Image src="/download.png" alt="Download" width={300} height={200} className="rounded-xl shadow-lg mx-auto" />
           <h3 className="text-xl font-semibold mt-4">Download</h3>
-          <p className="text-gray-500 text-center mt-2 px-4">Instantly download and use your new virtual background.</p>
+          <p className="text-gray-500 mt-2 px-4">Instantly download and use your new virtual background.</p>
         </div>
       </section>
     </main>
