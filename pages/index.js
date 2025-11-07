@@ -1,88 +1,36 @@
-import Image from "next/image";
-import Link from "next/link";
-import Head from "next/head";
+import Image from 'next/image';
 
 export default function Home() {
   return (
-    <>
-      <Head>
-        <title>LiveBackdrop – AI Virtual Backgrounds</title>
-        <meta
-          name="description"
-          content="Create stunning AI-generated virtual backgrounds for your live streams and meetings."
-        />
-      </Head>
-
-      {/* 顶部大标题区域 */}
-      <section className="flex flex-col items-center justify-center text-center py-20 bg-gradient-to-b from-white to-blue-50">
-        <h1 className="text-5xl font-extrabold text-blue-700 mb-6">
-          LiveBackdrop
-        </h1>
-        <p className="text-gray-600 text-lg mb-8 max-w-2xl">
-          Create stunning virtual backgrounds powered by AI for your live
-          streams and meetings.
+    <main className="flex flex-col items-center justify-center min-h-screen py-10 px-4 bg-white">
+      {/* Hero 区域 */}
+      <section className="text-center mb-10">
+        <h1 className="text-4xl font-bold mb-4 text-gray-800">Bring Your Live to Life</h1>
+        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          Create stunning virtual backgrounds with AI. Generate, customize, and download in seconds.
         </p>
-        <Link
-          href="/generate"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition"
-        >
-          Get Started
-        </Link>
       </section>
 
-      {/* 功能介绍区 —— 水平居中、上下对齐 */}
-      <section className="w-full flex justify-center items-center py-20 bg-white">
-        <div className="grid md:grid-cols-3 gap-12 max-w-6xl w-full px-6 text-center place-items-center">
-          {/* 卡片1 */}
-          <div className="flex flex-col items-center">
-            <Image
-              src="/ai-generate.png"
-              alt="AI Generate"
-              width={120}
-              height={120}
-              className="mb-6"
-            />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              AI Generate
-            </h3>
-            <p className="text-gray-600 max-w-xs">
-              Instantly create professional virtual backgrounds using advanced
-              AI.
-            </p>
-          </div>
+      {/* 三个功能图片区 */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Image src="/ai-generate.jpg" alt="AI Generate" width={300} height={200} className="rounded-xl shadow-md" />
+          <h3 className="text-xl font-semibold mt-4">AI Generate</h3>
+          <p className="text-gray-500 text-center mt-2 px-4">Automatically create virtual backgrounds with AI power.</p>
+        </div>
 
-          {/* 卡片2 */}
-          <div className="flex flex-col items-center">
-            <Image
-              src="/customize.png"
-              alt="Customize"
-              width={120}
-              height={120}
-              className="mb-6"
-            />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Customize</h3>
-            <p className="text-gray-600 max-w-xs">
-              Fine-tune lighting, colors, and composition for your perfect
-              scene.
-            </p>
-          </div>
+        <div className="flex flex-col items-center">
+          <Image src="/customize.jpg" alt="Customize" width={300} height={200} className="rounded-xl shadow-md" />
+          <h3 className="text-xl font-semibold mt-4">Customize</h3>
+          <p className="text-gray-500 text-center mt-2 px-4">Adjust lighting, colors, and style for your unique brand.</p>
+        </div>
 
-          {/* 卡片3 */}
-          <div className="flex flex-col items-center">
-            <Image
-              src="/download.png"
-              alt="Download"
-              width={120}
-              height={120}
-              className="mb-6"
-            />
-            <h3 className="text-xl font-bold text-gray-800 mb-2">Download</h3>
-            <p className="text-gray-600 max-w-xs">
-              Save and apply your generated backgrounds with a single click.
-            </p>
-          </div>
+        <div className="flex flex-col items-center">
+          <Image src="/download.jpg" alt="Download" width={300} height={200} className="rounded-xl shadow-md" />
+          <h3 className="text-xl font-semibold mt-4">Download</h3>
+          <p className="text-gray-500 text-center mt-2 px-4">Instantly download and use your new virtual background.</p>
         </div>
       </section>
-    </>
+    </main>
   );
 }
