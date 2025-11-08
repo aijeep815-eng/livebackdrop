@@ -73,6 +73,15 @@ nav a:hover {
   color: white;
 }
 
+/* --- Fix Tailwind nav block issue --- */
+nav {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+}
+
+
 /* 动画 */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
