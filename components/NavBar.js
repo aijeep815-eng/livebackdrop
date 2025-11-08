@@ -1,99 +1,56 @@
-import Link from "next/link";
+import Link from 'next/link';
+import { useState } from 'react';
 
 export default function NavBar() {
+  const [showAITools, setShowAITools] = useState(false);
+  const [showSceneMode, setShowSceneMode] = useState(false);
+
   return (
     <nav className="bg-blue-800 text-white shadow-md fixed top-0 left-0 w-full z-50">
-      <div className="max-w-7xl mx-auto flex justify-center items-center px-6 py-3 space-x-8">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="text-xl font-bold tracking-wide hover:text-blue-300 transition-colors"
-        >
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
+        <Link href="/" className="text-xl font-bold hover:text-blue-300">
           LiveBackdrop
         </Link>
 
-        {/* AI Tools Dropdown */}
-        <div className="relative group">
-          <button className="font-semibold hover:text-blue-300 transition-colors">
-            AI Tools ▾
-          </button>
-
-          {/* 一级菜单 */}
-          <div className="absolute hidden group-hover:block bg-white text-blue-800 rounded-lg shadow-lg mt-2 min-w-[14rem]">
-            <Link
-              href="/generate"
-              className="block px-4 py-2 hover:bg-blue-100 transition-colors"
-            >
-              Generate Background
-            </Link>
-            <Link
-              href="/upload"
-              className="block px-4 py-2 hover:bg-blue-100 transition-colors"
-            >
-              Upload & Edit
-            </Link>
-
-            {/* 二级菜单 */}
-            <div className="relative group/submenu">
-              <button className="block px-4 py-2 w-full text-left font-semibold hover:bg-blue-100 transition-colors">
-                Scene Mode ▸
-              </button>
-
-              <div className="absolute hidden group-hover/submenu:block left-full top-0 bg-white text-blue-800 rounded-lg shadow-lg min-w-[14rem]">
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Office & Meeting
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Streaming & Studio
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Indoor Living
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Outdoor & Nature
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Education & Presentation
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Business & Brand
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Creative & Theme
-                </a>
-                <a href="#" className="block px-4 py-2 hover:bg-blue-100">
-                  Custom AI Mode
-                </a>
+        <div className="flex space-x-6 items-center">
+          <div
+            className="relative"
+            onMouseEnter={() => setShowAITools(true)}
+            onMouseLeave={() => setShowAITools(false)}
+          >
+            <button className="font-semibold hover:text-blue-300">AI Tools ▾</button>
+            {showAITools && (
+              <div className="absolute left-0 mt-2 bg-white text-blue-800 rounded-md shadow-lg w-52">
+                <Link href="/generate" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Generate Background</Link>
+                <Link href="/upload" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Upload & Edit</Link>
+                <div
+                  className="relative"
+                  onMouseEnter={() => setShowSceneMode(true)}
+                  onMouseLeave={() => setShowSceneMode(false)}
+                >
+                  <div className="block px-4 py-2 cursor-pointer hover:bg-blue-600 hover:text-white">Scene Mode ▸</div>
+                  {showSceneMode && (
+                    <div className="absolute top-0 left-full ml-1 bg-white text-blue-800 rounded-md shadow-lg w-56">
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Office & Meeting</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Streaming & Studio</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Indoor Living</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Outdoor & Nature</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Education & Presentation</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Business & Brand</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Creative & Theme</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Custom AI Mode</Link>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        </div>
 
-        {/* Other menu items */}
-        <Link
-          href="/pricing"
-          className="font-semibold hover:text-blue-300 transition-colors"
-        >
-          Pricing
-        </Link>
-        <Link
-          href="/gallery"
-          className="font-semibold hover:text-blue-300 transition-colors"
-        >
-          Gallery
-        </Link>
-        <Link
-          href="/about"
-          className="font-semibold hover:text-blue-300 transition-colors"
-        >
-          About
-        </Link>
-        <Link
-          href="/contact"
-          className="font-semibold hover:text-blue-300 transition-colors"
-        >
-          Contact
-        </Link>
+          <Link href="/pricing" className="hover:text-blue-300 font-semibold">Pricing</Link>
+          <Link href="/gallery" className="hover:text-blue-300 font-semibold">Gallery</Link>
+          <Link href="/about" className="hover:text-blue-300 font-semibold">About</Link>
+          <Link href="/contact" className="hover:text-blue-300 font-semibold">Contact</Link>
+        </div>
       </div>
     </nav>
   );
