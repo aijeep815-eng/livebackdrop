@@ -1,96 +1,69 @@
-import { getCsrfToken, signIn } from "next-auth/react";
-import Link from "next/link";
-import { useState } from "react";
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/router';
+import Link from 'next/link';
 
-export default function LoginPage({ csrfToken }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export default function Login() {
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  async function handleSubmit(e) {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
-
-    const res = await signIn("credentials", {
+    setError('');
+    const res = await signIn('credentials', {
       redirect: false,
       email,
       password,
     });
-
     setLoading(false);
 
-    if (res.error) {
-      setError(res.error);
+    if (res?.error) {
+      setError('Email or password is incorrect.');
     } else {
-      window.location.href = "/";
+      router.push('/');
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200">
-      <form
-        method="post"
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-2xl w-96"
-      >
-        <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
-
-        <h1 className="text-3xl font-extrabold text-center text-blue-600 mb-6">
-          登录 LiveBackdrop
-        </h1>
-
-        {error && (
-          <div className="bg-red-100 text-red-600 text-sm p-2 rounded mb-4 text-center">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <label className="block mb-4">
-          <span className="text-gray-700 text-sm font-medium">邮箱</span>
+    <div className="max-w-md mx-auto mt-28 bg-white rounded-lg shadow p-6">
+      <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-400"
-            placeholder="your@email.com"
+            className="w-full border rounded px-3 py-2"
             required
           />
-        </label>
-
-        <label className="block mb-6">
-          <span className="text-gray-700 text-sm font-medium">密码</span>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-400"
-            placeholder="请输入密码"
+            className="w-full border rounded px-3 py-2"
             required
           />
-        </label>
-
+        </div>
+        {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition"
+          className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
         >
-          {loading ? "正在登录..." : "登录"}
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
-
-        <p className="text-center text-sm text-gray-500 mt-4">
-          还没有账户？
-          <Link href="/register" className="text-blue-600 hover:underline ml-1">
-            点击注册
-          </Link>
-        </p>
       </form>
+      <p className="text-sm text-center mt-3">
+        No account? <Link href="/register" className="text-blue-700 hover:underline">Register</Link>
+      </p>
     </div>
   );
-}
-
-export async function getServerSideProps(context) {
-  const csrfToken = await getCsrfToken(context);
-  return { props: { csrfToken } };
 }

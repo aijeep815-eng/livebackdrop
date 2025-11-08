@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import { useSession, signOut } from 'next-auth/react';
 
 const LanguageSwitcher = dynamic(() => import('@/components/LanguageSwitcher'), { ssr: false });
 
@@ -8,6 +9,7 @@ export default function NavBar() {
   const [showAITools, setShowAITools] = useState(false);
   const [showSceneMode, setShowSceneMode] = useState(false);
   const timeoutRef = useRef(null);
+  const { data: session } = useSession();
 
   const handleEnter = (setStateFn) => {
     clearTimeout(timeoutRef.current);
@@ -67,7 +69,22 @@ export default function NavBar() {
           <Link href="/contact" className="hover:text-blue-300 font-semibold">Contact</Link>
         </div>
 
-        <LanguageSwitcher />
+        <div className="flex items-center gap-6">
+          <LanguageSwitcher />
+          {!session?.user ? (
+            <div className="flex items-center gap-4 text-sm">
+              <Link href="/login" className="hover:text-blue-300">Login</Link>
+              <Link href="/register" className="hover:text-blue-300">Register</Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="opacity-90 hidden sm:inline">{session.user.email}</span>
+              <button onClick={() => signOut({ callbackUrl: '/' })} className="bg-white/10 px-3 py-1 rounded hover:bg-white/20">
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
