@@ -11,7 +11,7 @@ export default function NavBar() {
     alignItems: 'center',
     gap: '2rem',
     flexWrap: 'wrap',
-    height: '64px', // 固定更高的导航条高度
+    height: '64px',
   }
 
   const dropdownStyle = (open) => ({
@@ -20,13 +20,14 @@ export default function NavBar() {
     position: 'absolute',
     top: '100%',
     left: '50%',
-    transform: 'translateX(-50%)', // 居中对齐
+    transform: 'translateX(-50%)',
     backgroundColor: '#ffffff',
     color: '#1e40af',
     borderRadius: '0.5rem',
-    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
     minWidth: '14rem',
     zIndex: 50,
+    padding: '0.5rem 0',
   })
 
   const subStyle = (open) => ({
@@ -38,18 +39,24 @@ export default function NavBar() {
     backgroundColor: '#ffffff',
     color: '#1e40af',
     borderRadius: '0.5rem',
-    boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
     minWidth: '16rem',
     zIndex: 50,
+    padding: '0.5rem 0',
   })
 
-  const linkCls = 'px-4 py-2 hover:bg-blue-100'
-  const topLinkCls = 'font-semibold hover:text-blue-300 cursor-pointer'
+  const linkCls =
+    'px-4 py-2 text-blue-800 hover:bg-blue-100 hover:text-blue-900 transition-colors'
+  const topLinkCls =
+    'font-semibold hover:text-blue-300 transition-colors cursor-pointer'
 
   return (
     <nav className="bg-blue-800 text-white shadow-md fixed top-0 left-0 w-full z-50">
       <div className="max-w-7xl mx-auto px-6" style={barStyle}>
-        <Link href="/" className="text-xl font-bold tracking-wide hover:text-blue-300">
+        <Link
+          href="/"
+          className="text-xl font-bold tracking-wide hover:text-blue-300 transition-colors"
+        >
           LiveBackdrop
         </Link>
 
@@ -76,7 +83,7 @@ export default function NavBar() {
               onMouseEnter={() => setOpenScene(true)}
               onMouseLeave={() => setOpenScene(false)}
             >
-              <button className="text-left px-4 py-2 font-semibold hover:bg-blue-100">
+              <button className="block w-full text-left px-4 py-2 font-semibold text-blue-800 hover:bg-blue-100">
                 Scene Mode ▸
               </button>
               <div style={subStyle(openScene)}>
