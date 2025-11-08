@@ -2,96 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 主色定义 */
 :root {
   --primary-blue: #1e40af;
   --light-blue: #3b82f6;
 }
 
-/* 全局样式 */
-html, body {
+body, html {
   margin: 0;
   padding: 0;
   background-color: #f9fafb;
-  font-family: 'Inter', sans-serif;
+  font-family: Inter, sans-serif;
 }
 
-/* 顶部导航栏 */
 nav {
   background-color: var(--primary-blue);
-  color: white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .1);
   position: relative;
   z-index: 1000;
 }
 
+/* 保留颜色样式但移除 dropdown 冲突 */
+nav, nav a {
+  color: #fff;
+}
+
 nav a {
-  color: white;
   font-weight: 600;
   text-decoration: none;
-  transition: color 0.2s ease-in-out;
+  transition: color .2s ease-in-out;
 }
 
 nav a:hover {
   color: var(--light-blue);
 }
 
-/* 下拉菜单基础 */
-.dropdown {
-  position: relative;
-}
-
-.dropdown-menu {
-  background-color: white;
-  color: var(--primary-blue);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 9999;
-  border-radius: 0.5rem;
-  min-width: 12rem;
-  display: none;
-}
-
-/* 悬停时展开 */
-.dropdown:hover .dropdown-menu {
-  display: block;
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-/* 菜单项 */
-.dropdown-menu a {
-  display: block;
-  padding: 0.5rem 1rem;
-  text-decoration: none;
-  color: var(--primary-blue);
-}
-
-.dropdown-menu a:hover {
-  background-color: var(--light-blue);
-  color: white;
-}
-
-/* --- Fix Tailwind nav block issue --- */
-nav {
+/* 修复 Tailwind nav 显示问题 */
+nav > div {
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   flex-wrap: wrap !important;
 }
 
-/* 修正下拉 hover 样式 */
+/* 强制启用 Tailwind group-hover 控制下拉 */
 .group:hover .group-hover\:flex {
   display: flex !important;
 }
+
 .group\/sub:hover .group-hover\/sub\:flex {
   display: flex !important;
-}
-
-
-/* 动画 */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
 }
