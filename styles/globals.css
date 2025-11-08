@@ -14,7 +14,7 @@ body, html {
   font-family: Inter, sans-serif;
 }
 
-/* Theme-only color rules; do NOT control layout */
+/* 顶部导航条背景 */
 nav {
   background-color: var(--primary-blue);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -22,7 +22,9 @@ nav {
   z-index: 1000;
 }
 
-nav, nav a {
+/* ✅ 只让顶部菜单白字，不影响下拉菜单 */
+nav > div > a,
+nav > div > div > button {
   color: #fff;
 }
 
@@ -36,5 +38,11 @@ nav a:hover {
   color: var(--light-blue);
 }
 
-/* Remove old dropdown rules entirely to avoid conflicts */
-/* (Left intentionally blank) */
+/* 修复导航布局 */
+nav > div {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  height: 64px;
+}
