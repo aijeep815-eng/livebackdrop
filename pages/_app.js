@@ -1,11 +1,20 @@
-import '@/styles/globals.css'  // 确保 Tailwind 样式被加载
-import { useEffect } from 'react'
+import '@/styles/globals.css'
+import NavBar from '@/components/NavBar'
+import Footer from '@/components/Footer'
 
 export default function App({ Component, pageProps }) {
-  useEffect(() => {
-    // 在客户端确保 Tailwind 动态加载后刷新样式
-    document.body.classList.add('bg-gray-50')
-  }, [])
+  return (
+    <>
+      {/* 头部导航栏 */}
+      <NavBar />
+      
+      {/* 页面内容 */}
+      <main>
+        <Component {...pageProps} />
+      </main>
 
-  return <Component {...pageProps} />
+      {/* 页脚（如果没有 Footer.js，可以先删掉这行） */}
+      <Footer />
+    </>
+  )
 }
