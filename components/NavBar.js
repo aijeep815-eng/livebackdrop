@@ -13,7 +13,6 @@ export default function NavBar() {
     clearTimeout(timeoutRef.current);
     setStateFn(true);
   };
-
   const handleLeave = (setStateFn) => {
     timeoutRef.current = setTimeout(() => setStateFn(false), 200);
   };
@@ -26,7 +25,6 @@ export default function NavBar() {
             LiveBackdrop
           </Link>
 
-          {/* AI Tools dropdown */}
           <div
             className="relative"
             onMouseEnter={() => handleEnter(setShowAITools)}
@@ -34,29 +32,28 @@ export default function NavBar() {
           >
             <button className="font-semibold hover:text-blue-300">AI Tools ▾</button>
             {showAITools && (
-              <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-white text-blue-800 rounded-md shadow-lg w-56">
-                <Link href="/generate" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Generate Background</Link>
-                <Link href="/upload" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Upload & Edit</Link>
+              <div className="absolute left-1/2 -translate-x-1/2 mt-2 bg-blue-100 text-blue-800 rounded-md shadow-lg w-56">
+                <Link href="/generate" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Generate Background</Link>
+                <Link href="/upload" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Upload & Edit</Link>
 
-                {/* Scene Mode submenu */}
                 <div
                   className="relative"
                   onMouseEnter={() => handleEnter(setShowSceneMode)}
                   onMouseLeave={() => handleLeave(setShowSceneMode)}
                 >
-                  <div className="block px-4 py-2 cursor-pointer hover:bg-blue-600 hover:text-white">
+                  <div className="block px-4 py-2 cursor-pointer hover:bg-blue-700 hover:text-white">
                     Scene Mode ▸
                   </div>
                   {showSceneMode && (
-                    <div className="absolute top-0 left-full ml-1 bg-white text-blue-800 rounded-md shadow-lg w-60">
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Office & Meeting</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Streaming & Studio</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Indoor Living</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Outdoor & Nature</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Education & Presentation</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Business & Brand</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Creative & Theme</Link>
-                      <Link href="#" className="block px-4 py-2 hover:bg-blue-600 hover:text-white">Custom AI Mode</Link>
+                    <div className="absolute top-0 left-full ml-1 bg-blue-100 text-blue-800 rounded-md shadow-lg w-60">
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Office & Meeting</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Streaming & Studio</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Indoor Living</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Outdoor & Nature</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Education & Presentation</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Business & Brand</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Creative & Theme</Link>
+                      <Link href="#" className="block px-4 py-2 hover:bg-blue-700 hover:text-white">Custom AI Mode</Link>
                     </div>
                   )}
                 </div>
@@ -70,7 +67,6 @@ export default function NavBar() {
           <Link href="/contact" className="hover:text-blue-300 font-semibold">Contact</Link>
         </div>
 
-        {/* Right side: language switcher */}
         <LanguageSwitcher />
       </div>
     </nav>
