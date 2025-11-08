@@ -15,6 +15,7 @@
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.35",
     "mongoose": "^8.6.0",
-    "next-auth": "^4.24.5"
+    "next-auth": "^4.24.5",
+    "bcryptjs": "^2.4.3"
   }
 }
