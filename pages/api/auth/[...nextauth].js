@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
@@ -26,11 +27,19 @@ export const authOptions = {
         return { id: user._id.toString(), email: user.email, name: user.name || '' };
       },
     }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      async profile(profile) {
+        await connectDB();
+        const existing = await User.findOne({ email: profile.email });
+        if (existing) return { id: existing._id.toString(), email: existing.email, name: existing.name || profile.name };
+        const newUser = await User.create({ email: profile.email, name: profile.name || '', password: '' });
+        return { id: newUser._id.toString(), email: newUser.email, name: newUser.name };
+      },
+    }),
   ],
-  session: {
-    strategy: 'jwt',
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  },
+  session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 7 },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -42,18 +51,12 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user = {
-          id: token.uid,
-          email: token.email,
-          name: token.name,
-        };
+        session.user = { id: token.uid, email: token.email, name: token.name };
       }
       return session;
     },
   },
-  pages: {
-    signIn: '/login',
-  },
+  pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
