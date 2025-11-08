@@ -81,6 +81,14 @@ nav {
   flex-wrap: wrap !important;
 }
 
+/* 修正下拉 hover 样式 */
+.group:hover .group-hover\:flex {
+  display: flex !important;
+}
+.group\/sub:hover .group-hover\/sub\:flex {
+  display: flex !important;
+}
+
 
 /* 动画 */
 @keyframes fadeIn {
