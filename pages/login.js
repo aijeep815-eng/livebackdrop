@@ -1,61 +1,24 @@
-import { useEffect, useState } from 'react';
-import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { useState } from 'react';
 import Link from 'next/link';
 
 export default function Login() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/ping').catch(() => {});
-    fetch('/api/auth/session').catch(() => {});
-  }, []);
-
-  const onSubmit = async (e) => {
+  const onSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-    const res = await signIn('credentials', {
-      redirect: false,
-      email,
-      password,
-      callbackUrl: '/',
-    });
-    setLoading(false);
-    if (res?.error) {
-      setError('Email or password is incorrect.');
-    } else {
-      router.push('/');
-    }
+    setError(''); // 这里先不管真正登录，只验证按钮是否工作
+    alert('邮箱登录表单已提交（测试用）');
   };
 
-  const handleGoogle = async () => {
-    setGoogleLoading(true);
-    setError('');
-    const res = await signIn('google', {
-      callbackUrl: '/',
-      redirect: false,
-    });
-    setGoogleLoading(false);
-
-    if (res?.error) {
-      setError('Google 登录失败: ' + res.error);
-      return;
-    }
-
-    if (res?.url) {
-      window.location.href = res.url;
-    }
+  const handleGoogle = () => {
+    alert('Google 按钮已触发（说明前端点击事件是正常的）');
   };
 
   return (
     <div className="max-w-md mx-auto mt-28 bg-white rounded-lg shadow p-6">
-      <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Login (前端测试版)</h1>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
@@ -87,10 +50,9 @@ export default function Login() {
 
         <button
           type="submit"
-          disabled={loading}
           className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          测试邮箱登录按钮
         </button>
       </form>
 
@@ -102,16 +64,10 @@ export default function Login() {
 
       <button
         onClick={handleGoogle}
-        disabled={googleLoading}
         className="w-full border border-gray-300 rounded py-2 flex items-center justify-center gap-2 hover:bg-gray-100"
       >
-        <img
-          src="https://www.svgrepo.com/show/355037/google.svg"
-          alt="Google"
-          className="w-5 h-5"
-        />
         <span className="text-gray-700 font-medium">
-          {googleLoading ? 'Connecting…' : 'Continue with Google'}
+          测试 Google 登录按钮（应当弹出提示框）
         </span>
       </button>
 
