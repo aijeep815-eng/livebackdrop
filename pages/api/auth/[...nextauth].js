@@ -16,14 +16,11 @@ export const authOptions = {
       async authorize(credentials) {
         const { email, password } = credentials || {};
         if (!email || !password) return null;
-
         await connectDB();
         const user = await User.findOne({ email }).select('+password');
         if (!user) return null;
-
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) return null;
-
+        const ok = await bcrypt.compare(password, user.password);
+        if (!ok) return null;
         return { id: user._id.toString(), email: user.email, name: user.name || '' };
       },
     }),
@@ -32,14 +29,15 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       async profile(profile) {
         await connectDB();
-        const existing = await User.findOne({ email: profile.email });
-        if (existing) return { id: existing._id.toString(), email: existing.email, name: existing.name || profile.name };
-        const newUser = await User.create({ email: profile.email, name: profile.name || '', password: '' });
-        return { id: newUser._id.toString(), email: newUser.email, name: newUser.name };
+        const hit = await User.findOne({ email: profile.email });
+        if (hit) return { id: hit._id.toString(), email: hit.email, name: hit.name || profile.name };
+        const u = await User.create({ email: profile.email, name: profile.name || '', password: '' });
+        return { id: u._id.toString(), email: u.email, name: u.name };
       },
     }),
   ],
   session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 7 },
+  pages: { signIn: '/login', newUser: '/' },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
@@ -55,8 +53,15 @@ export const authOptions = {
       }
       return session;
     },
+    async redirect({ url, baseUrl }) {
+      try {
+        const u = new URL(url);
+        const b = new URL(baseUrl);
+        if (u.origin === b.origin) return url;
+      } catch {}
+      return baseUrl;
+    },
   },
-  pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
 };
 
