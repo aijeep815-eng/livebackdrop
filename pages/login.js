@@ -10,14 +10,13 @@ export default function Login() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
-    // 预热，减少第一次卡顿
     fetch('/api/ping').catch(() => {});
     fetch('/api/auth/session').catch(() => {});
   }, []);
 
   const onSubmit = (e) => {
     e.preventDefault();
-    alert('邮箱登录表单已提交（这里只是测试，不真正登录）');
+    alert('邮箱登录表单已提交（测试用，仅验证按钮是否工作）');
   };
 
   const handleGoogle = async () => {
@@ -38,64 +37,46 @@ export default function Login() {
         return;
       }
 
-      // 把返回的对象打印出来，方便我们看问题
-      setMsg('signIn 返回: ' + JSON.stringify(res));
+      setMsg('signIn 返回:\n' + JSON.stringify(res, null, 2));
 
       if (res.error) {
-        // 例如 Configuration / OAuthCallback 等
-        alert('Google 登录失败，错误: ' + res.error);
+        alert('Google 登录失败: ' + res.error);
         return;
       }
 
-      if (res.url) {
-        // 手动跳转
-        window.location.href = res.url;
-      }
+      // 注意：这里不跳转，为了让你能看到完整的返回内容
+      // if (res.url) window.location.href = res.url;
+
     } catch (e) {
       setGoogleLoading(false);
-      setMsg('调用 signIn("google") 时抛出异常: ' + (e?.message || String(e)));
-      alert('调用 signIn("google") 时报错，详情见页面红字。');
+      setMsg('调用 signIn("google") 抛出异常:\n' + (e?.message || String(e)));
+      alert('调用 signIn("google") 时出错，请看页面红字');
     }
   };
 
   return (
     <div className="max-w-md mx-auto mt-28 bg-white rounded-lg shadow p-6">
-      <h1 className="text-2xl font-bold mb-4 text-center">Login 调试版</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Login 调试版（不跳转）</h1>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border rounded px-3 py-2" required />
         </div>
+
         <div>
           <label className="block text-sm font-medium mb-1">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full border rounded px-3 py-2" required />
         </div>
 
         {msg && (
-          <p className="text-red-600 text-xs whitespace-pre-wrap break-all">
-            {msg}
-          </p>
+          <pre className="text-red-600 text-xs whitespace-pre-wrap break-all bg-red-50 p-2 rounded mt-2">
+{msg}
+          </pre>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800"
-        >
-          测试邮箱表单（不会真正登录）
+        <button type="submit" disabled={loading} className="w-full bg-blue-700 text-white py-2 rounded hover:bg-blue-800">
+          测试邮箱表单
         </button>
       </form>
 
@@ -111,26 +92,19 @@ export default function Login() {
         className="w-full border border-gray-300 rounded py-2 flex items-center justify-center gap-2 hover:bg-gray-100"
       >
         <span className="text-gray-700 font-medium">
-          {googleLoading ? 'Connecting…' : '使用 Google 登录（调试）'}
+          {googleLoading ? 'Connecting…' : '使用 Google 登录（调试，不跳转）'}
         </span>
       </button>
 
       <div className="mt-4 text-xs text-gray-600 space-y-1">
-        <p>如果点击按钮后既没有弹窗，也没有红字信息，说明 Vercel 部署的不是这个 login.js。</p>
-        <p>下面这个是直接走 NextAuth 默认链接：</p>
-        <a
-          href="/api/auth/signin/google"
-          className="text-blue-700 underline break-all"
-        >
+        <p>NextAuth 默认 Google 登录链接：</p>
+        <a href="/api/auth/signin/google" className="text-blue-700 underline break-all">
           /api/auth/signin/google
         </a>
       </div>
 
       <p className="text-sm text-center mt-3">
-        No account?{' '}
-        <Link href="/register" className="text-blue-700 hover:underline">
-          Register
-        </Link>
+        No account? <Link href="/register" className="text-blue-700 hover:underline">Register</Link>
       </p>
     </div>
   );
