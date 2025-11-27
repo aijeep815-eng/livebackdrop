@@ -45,10 +45,20 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     fetch("/api/admin/users")
       .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch(() => setUsers([]));
+      .then((data) => {
+        if (!cancelled) setUsers(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setUsers([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -83,7 +93,7 @@ export default function AdminUsersPage() {
                     {u.role === "admin" ? t.admin : t.user}
                   </td>
                   <td className="px-3 py-2 text-gray-500">
-                    {u.createdAt ? u.createdAt.slice(0, 10) : ""}
+                    {u.createdAt ? String(u.createdAt).slice(0, 10) : ""}
                   </td>
                 </tr>
               ))}
