@@ -2,10 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]";
-import dbConnect from "../../lib/dbConnect";
-import User from "../../models/User";
 
 const textMap = {
   en: {
@@ -97,38 +93,4 @@ export default function AdminUsersPage() {
       )}
     </AdminLayout>
   );
-}
-
-// 只有管理员才能访问用户管理页
-export async function getServerSideProps(context) {
-  const session = await getServerSession(
-    context.req,
-    context.res,
-    authOptions
-  );
-
-  if (!session) {
-    return {
-      redirect: {
-        destination: "/api/auth/signin",
-        permanent: false
-      }
-    };
-  }
-
-  await dbConnect();
-  const dbUser = await User.findOne({ email: session.user.email }).lean();
-
-  if (!dbUser || dbUser.role !== "admin") {
-    return {
-      redirect: {
-        destination: "/",
-        permanent: false
-      }
-    };
-  }
-
-  return {
-    props: {}
-  };
 }
