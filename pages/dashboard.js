@@ -136,6 +136,39 @@ export default function Dashboard({ user, logs }) {
     return ua;
   };
 
+  // 简单解析 UA，判断设备类型：手机 / 平板 / 电脑 / 未知
+  const deviceType = (uaRaw) => {
+    const ua = (uaRaw || '').toLowerCase();
+    if (!ua) return '未知设备';
+
+    if (ua.includes('iphone') || ua.includes('android') && ua.includes('mobile')) {
+      return '手机';
+    }
+    if (ua.includes('ipad') || (ua.includes('android') && !ua.includes('mobile'))) {
+      return '平板';
+    }
+    if (ua.includes('windows') || ua.includes('macintosh') || ua.includes('linux')) {
+      return '电脑';
+    }
+    return '未知设备';
+  };
+
+  // 组合显示：登录方式 + 设备类型，例如：Google（电脑）、邮箱（手机）、浏览器访问（电脑）
+  const methodWithDevice = (log) => {
+    const uaType = deviceType(log.userAgent);
+    if (log.type === 'login') {
+      let base =
+        log.meta?.provider === 'google'
+          ? 'Google'
+          : log.meta?.provider === 'credentials'
+          ? '邮箱'
+          : '登录';
+      return `${base}（${uaType}）`;
+    }
+    // 非登录事件：活动
+    return `浏览器访问（${uaType}）`;
+  };
+
   // 计算分页
   const total = logs?.length || 0;
   const pageCount = total === 0 ? 1 : Math.ceil(total / pageSize);
@@ -289,8 +322,8 @@ export default function Dashboard({ user, logs }) {
                   <tr className="border-b">
                     <th className="text-left py-2 pr-4">时间</th>
                     <th className="text-left py-2 pr-4">类型</th>
-                    <th className="text-left py-2 pr-4">IP</th>
                     <th className="text-left py-2 pr-4">方式</th>
+                    <th className="text-left py-2 pr-4">IP</th>
                     <th className="text-left py-2">设备</th>
                   </tr>
                 </thead>
@@ -308,14 +341,10 @@ export default function Dashboard({ user, logs }) {
                           : log.type}
                       </td>
                       <td className="py-2 pr-4">
-                        {displayIp(log.ip)}
+                        {methodWithDevice(log)}
                       </td>
                       <td className="py-2 pr-4">
-                        {log.meta?.provider === 'google'
-                          ? 'Google'
-                          : log.meta?.provider === 'credentials'
-                          ? '邮箱'
-                          : '-'}
+                        {displayIp(log.ip)}
                       </td>
                       <td className="py-2 text-gray-500 max-w-xs truncate">
                         {displayUA(log.userAgent)}
@@ -327,7 +356,7 @@ export default function Dashboard({ user, logs }) {
             </div>
 
             {/* 分页控制 */}
-            <div className="flex items-center justify-between mt-3 text-sm text-gray-600">
+            <div className="flex items-center justify_between mt-3 text-sm text-gray-600">
               <div>
                 第 <span className="font-semibold">{currentPage + 1}</span> 页 / 共{' '}
                 <span className="font-semibold">{pageCount}</span> 页（共 {total} 条）
