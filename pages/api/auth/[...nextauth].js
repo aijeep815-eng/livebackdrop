@@ -1,68 +1,12 @@
+// pages/api/auth/[...nextauth].js
 import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
-import { connectDB } from '@/lib/mongodb';
-import User from '@/models/User';
-import bcrypt from 'bcryptjs';
 
-export const authOptions = {
+export default NextAuth({
   providers: [
-    CredentialsProvider({
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'text' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        const { email, password } = credentials || {};
-        if (!email || !password) return null;
-        await connectDB();
-        const user = await User.findOne({ email }).select('+password');
-        if (!user) return null;
-        const ok = await bcrypt.compare(password, user.password);
-        if (!ok) return null;
-        return { id: user._id.toString(), email: user.email, name: user.name || '' };
-      },
-    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      async profile(profile) {
-        await connectDB();
-        const hit = await User.findOne({ email: profile.email });
-        if (hit) return { id: hit._id.toString(), email: hit.email, name: hit.name || profile.name };
-        const u = await User.create({ email: profile.email, name: profile.name || '', password: '' });
-        return { id: u._id.toString(), email: u.email, name: u.name };
-      },
     }),
   ],
-  session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 7 },
-  pages: { signIn: '/login', newUser: '/' },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.uid = user.id;
-        token.email = user.email;
-        token.name = user.name;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user = { id: token.uid, email: token.email, name: token.name };
-      }
-      return session;
-    },
-    async redirect({ url, baseUrl }) {
-      try {
-        const u = new URL(url);
-        const b = new URL(baseUrl);
-        if (u.origin === b.origin) return url;
-      } catch {}
-      return baseUrl;
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
-
-export default NextAuth(authOptions);
+});
