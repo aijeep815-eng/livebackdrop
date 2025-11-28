@@ -104,6 +104,16 @@ export default function Dashboard({ user, logs }) {
     }
   };
 
+  const displayIp = (ip) => {
+    if (!ip || ip === 'unknown') return '未知';
+    return ip;
+  };
+
+  const displayUA = (ua) => {
+    if (!ua || ua === 'unknown') return '未知设备';
+    return ua;
+  };
+
   return (
     <div className="max-w-3xl mx-auto mt-24 bg-white rounded-lg shadow p-6 space-y-8">
       <h1 className="text-2xl font-bold text-center">Account Dashboard</h1>
@@ -240,7 +250,7 @@ export default function Dashboard({ user, logs }) {
                       {formatDate(log.createdAt)}
                     </td>
                     <td className="py-2 pr-4">
-                      {log.ip || '-'}
+                      {displayIp(log.ip)}
                     </td>
                     <td className="py-2 pr-4">
                       {log.meta?.provider === 'google'
@@ -250,7 +260,7 @@ export default function Dashboard({ user, logs }) {
                         : '其它'}
                     </td>
                     <td className="py-2 text-gray-500 max-w-xs truncate">
-                      {log.userAgent || '-'}
+                      {displayUA(log.userAgent)}
                     </td>
                   </tr>
                 ))}

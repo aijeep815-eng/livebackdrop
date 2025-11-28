@@ -67,7 +67,7 @@ export const authOptions = {
     async signIn({ user, account, req }) {
       await dbConnect();
 
-      // Google 首次登录时，写入用户
+      // Google 首次登录时，同步用户到数据库
       if (account?.provider === 'google') {
         const existing = await User.findOne({ email: user.email });
         if (!existing) {
@@ -80,17 +80,23 @@ export const authOptions = {
         }
       }
 
-      // 记录登录日志（失败也不影响登录）
+      // 记录登录日志
       try {
-        const xf = req?.headers?.['x-forwarded-for'];
-        const raw = Array.isArray(xf) ? xf[0] : xf || '';
-        const ip =
-          (raw || '')
-            .toString()
-            .split(',')[0]
-            .trim() || req?.socket?.remoteAddress || '';
+        let ip = 'unknown';
+        let ua = 'unknown';
 
-        const ua = req?.headers?.['user-agent'] || '';
+        if (req && req.headers) {
+          const xf = req.headers['x-forwarded-for'];
+          const raw =
+            Array.isArray(xf) ? xf[0] : (xf || '').toString();
+          const candidate =
+            (raw || '')
+              .split(',')[0]
+              .trim() || req.socket?.remoteAddress || '';
+
+          ip = candidate || 'unknown';
+          ua = req.headers['user-agent'] || 'unknown';
+        }
 
         await Usage.create({
           userEmail: user.email,
