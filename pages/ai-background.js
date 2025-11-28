@@ -41,16 +41,27 @@ export default function AIGenerateBackgroundPage() {
         body: JSON.stringify({ prompt: trimmed }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Request failed");
+        throw new Error(
+          data.error ||
+            data.message ||
+            "Request failed while generating background."
+        );
       }
 
-      const data = await res.json();
-      setImageUrl(data.imageUrl || "");
+      if (!data.imageUrl) {
+        throw new Error("No image URL returned from server.");
+      }
+
+      setImageUrl(data.imageUrl);
     } catch (err) {
       console.error(err);
-      setErrorMsg("Failed to generate background. Please try again in a moment.");
+      setErrorMsg(
+        err?.message ||
+          "Failed to generate background. Please try again in a moment."
+      );
     } finally {
       setLoading(false);
     }
@@ -87,7 +98,9 @@ export default function AIGenerateBackgroundPage() {
                 />
 
                 {errorMsg && (
-                  <p className="text-sm text-red-500">{errorMsg}</p>
+                  <p className="text-sm text-red-500 whitespace-pre-wrap">
+                    {errorMsg}
+                  </p>
                 )}
 
                 <button

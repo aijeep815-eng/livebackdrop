@@ -1,14 +1,23 @@
 // pages/api/generate-background.js
 import OpenAI from "openai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const apiKey = process.env.OPENAI_API_KEY;
+
+let client = null;
+if (apiKey) {
+  client = new OpenAI({ apiKey });
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({
+      error: "OPENAI_API_KEY is missing on the server.",
+    });
   }
 
   const { prompt } = req.body || {};
@@ -42,9 +51,16 @@ User description: ${prompt}
     return res.status(200).json({ imageUrl });
   } catch (error) {
     console.error("Error generating background:", error);
-    return res.status(500).json({
-      error: "Failed to generate background image.",
-      details: error.message,
+
+    const status = error.status || error.statusCode || 500;
+
+    return res.status(status).json({
+      error:
+        error?.error?.message ||
+        error?.message ||
+        "Failed to generate background image.",
+      type: error?.error?.type || undefined,
+      status,
     });
   }
 }
