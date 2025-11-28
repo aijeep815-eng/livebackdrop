@@ -8,6 +8,11 @@ export default function AIGenerateBackgroundPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // 🔹 会员 / 使用次数 UI 预留（当前是前端预览，不连后台）
+  const PLAN_NAME = "Free";
+  const DAILY_LIMIT = 5;
+  const [usedToday, setUsedToday] = useState(0);
+
   const examplePrompts = [
     "modern minimalist home office with soft lighting",
     "cyberpunk neon city street at night, rain, reflections",
@@ -44,7 +49,9 @@ export default function AIGenerateBackgroundPage() {
       let data = null;
       try {
         data = JSON.parse(text);
-      } catch (_) {}
+      } catch (_) {
+        // not JSON, keep raw text
+      }
 
       if (!res.ok) {
         const msg =
@@ -62,6 +69,12 @@ export default function AIGenerateBackgroundPage() {
       }
 
       setImageUrl(url);
+
+      // 本地前端预览：成功生成一次，就+1（真实限制以后放在后台）
+      setUsedToday((prev) => {
+        if (prev >= DAILY_LIMIT) return prev;
+        return prev + 1;
+      });
     } catch (err) {
       console.error(err);
       setErrorMsg(err?.message || "Failed to generate background. Please try again.");
@@ -70,23 +83,59 @@ export default function AIGenerateBackgroundPage() {
     }
   };
 
+  // 计算进度百分比（用于进度条显示）
+  const usagePercent = Math.min(100, Math.round((usedToday / DAILY_LIMIT) * 100));
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <NavBar />
 
       <main className="flex-1">
-        <section className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-10 md:py-14">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
-              AI Background Generator
-            </h1>
-            <p className="mt-2 text-slate-600">
-              Describe the scene you want, and we will generate a virtual background
-              optimized for live streaming and video calls.
-            </p>
+        <section className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 md:py-10">
+          {/* 顶部标题 + 使用情况 / 会员提示 */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 md:text-4xl">
+                AI Background Generator
+              </h1>
+              <p className="mt-2 text-slate-600">
+                Generate high-quality virtual backgrounds optimized for live streaming and video calls.
+              </p>
+            </div>
+
+            {/* 使用情况 / 会员小卡片（UI 预览） */}
+            <div className="w-full max-w-xs rounded-2xl border border-sky-100 bg-white px-4 py-3 text-sm shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-800">Plan: {PLAN_NAME}</span>
+                <span className="text-xs text-sky-700">Preview</span>
+              </div>
+              <p className="mt-1 text-xs text-slate-500">
+                Today: <span className="font-semibold text-slate-800">{usedToday}</span>
+                {" / "}
+                <span className="font-semibold text-slate-800">{DAILY_LIMIT}</span> AI generations
+              </p>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div
+                  className="h-full rounded-full bg-sky-500 transition-all"
+                  style={{ width: `${usagePercent}%` }}
+                />
+              </div>
+              <button
+                type="button"
+                className="mt-3 w-full rounded-xl border border-sky-500/60 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
+                onClick={() => {
+                  // 先跳到 pricing 页面，后面再接 Stripe
+                  window.location.href = "/pricing";
+                }}
+              >
+                Upgrade plan (coming soon)
+              </button>
+            </div>
           </div>
 
+          {/* 中间：左 Prompt / 右 示例 */}
           <div className="grid gap-6 md:grid-cols-[2fr,1.2fr]">
+            {/* 左边：Prompt 表单 */}
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <form onSubmit={handleGenerate} className="flex flex-col gap-4">
                 <label className="text-sm font-medium text-slate-800">
@@ -120,6 +169,7 @@ export default function AIGenerateBackgroundPage() {
               </form>
             </div>
 
+            {/* 右边：示例 prompt */}
             <div className="rounded-2xl bg-slate-900 p-5 text-slate-100 shadow-sm">
               <h2 className="text-sm font-semibold tracking-wide text-sky-200">
                 Example prompts
@@ -142,6 +192,7 @@ export default function AIGenerateBackgroundPage() {
             </div>
           </div>
 
+          {/* 结果区域 */}
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-sm font-semibold text-slate-800">
               Generated background
@@ -174,7 +225,6 @@ export default function AIGenerateBackgroundPage() {
           </div>
         </section>
       </main>
-      {/* 注意：这里不再渲染 Footer，避免重复；全局 Layout 自己会带 Footer */}
     </div>
   );
 }
