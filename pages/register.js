@@ -1,14 +1,47 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [okMsg, setOkMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    alert('邮箱注册功能我们稍后再做，现在可以直接用 Google 账号登录 / 注册。');
+    setError('');
+    setOkMsg('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      const data = await res.json();
+
+      setLoading(false);
+
+      if (!data.ok) {
+        setError(data.message || '注册失败。');
+        return;
+      }
+
+      setOkMsg('注册成功，请使用邮箱和密码登录。');
+      // 1-2 秒后跳转到登录页
+      setTimeout(() => {
+        router.push('/login');
+      }, 1200);
+    } catch (err) {
+      setLoading(false);
+      setError('网络错误，请稍后再试。');
+    }
   };
 
   return (
@@ -43,15 +76,20 @@ export default function Register() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full border rounded px-3 py-2"
-            placeholder=""
           />
         </div>
 
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {okMsg && <p className="text-green-600 text-sm">{okMsg}</p>}
+
         <button
           type="submit"
-          className="w-full bg-gray-400 text-white py-2 rounded cursor-not-allowed"
+          disabled={loading}
+          className={`w-full text-white py-2 rounded ${
+            loading ? 'bg-gray-400 cursor-wait' : 'bg-blue-700 hover:bg-blue-800'
+          }`}
         >
-          邮箱注册（暂未开通）
+          {loading ? 'Registering…' : '邮箱注册'}
         </button>
       </form>
 
@@ -65,9 +103,7 @@ export default function Register() {
         href="/api/auth/signin/google?callbackUrl=/"
         className="w-full border border-gray-300 rounded py-2 flex items-center justify-center gap-2 hover:bg-gray-100"
       >
-        <span className="text-gray-700 font-medium">
-          使用 Google 账号注册 / 登录
-        </span>
+        <span className="text-gray-700 font-medium">使用 Google 帐号注册 / 登录</span>
       </a>
 
       <p className="text-sm text-center mt-3">

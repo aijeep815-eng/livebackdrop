@@ -1,13 +1,41 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    alert('邮箱密码登录后端我们稍后再接，现在先用 Google 登录。');
+    setError('');
+    setLoading(true);
+
+    const res = await signIn('credentials', {
+      redirect: false,
+      email,
+      password,
+      callbackUrl: '/',
+    });
+
+    setLoading(false);
+
+    if (!res) {
+      setError('登录失败，请稍后重试。');
+      return;
+    }
+
+    if (res.error) {
+      setError('邮箱或密码错误。');
+      return;
+    }
+
+    // 登录成功
+    router.push(res.url || '/');
   };
 
   return (
@@ -36,11 +64,16 @@ export default function Login() {
           />
         </div>
 
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+
         <button
           type="submit"
-          className="w-full bg-gray-400 text-white py-2 rounded cursor-not-allowed"
+          disabled={loading}
+          className={`w-full text-white py-2 rounded ${
+            loading ? 'bg-gray-400 cursor-wait' : 'bg-blue-700 hover:bg-blue-800'
+          }`}
         >
-          邮箱登录（暂未开通）
+          {loading ? 'Logging in…' : '邮箱登录'}
         </button>
       </form>
 
@@ -54,9 +87,7 @@ export default function Login() {
         href="/api/auth/signin/google?callbackUrl=/"
         className="w-full border border-gray-300 rounded py-2 flex items-center justify-center gap-2 hover:bg-gray-100"
       >
-        <span className="text-gray-700 font-medium">
-          使用 Google 登录
-        </span>
+        <span className="text-gray-700 font-medium">使用 Google 登录</span>
       </a>
 
       <p className="text-sm text-center mt-3">
