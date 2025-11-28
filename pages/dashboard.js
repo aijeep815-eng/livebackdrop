@@ -20,6 +20,10 @@ export default function Dashboard({ user, logs }) {
   const [pwErr, setPwErr] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
 
+  // 分页：每页条数
+  const pageSize = 10;
+  const [page, setPage] = useState(0);
+
   // 页面加载时记录一次「真实设备 / IP」访问
   useEffect(() => {
     const logActivity = async () => {
@@ -130,6 +134,22 @@ export default function Dashboard({ user, logs }) {
   const displayUA = (ua) => {
     if (!ua || ua === 'unknown') return '未知设备';
     return ua;
+  };
+
+  // 计算分页
+  const total = logs?.length || 0;
+  const pageCount = total === 0 ? 1 : Math.ceil(total / pageSize);
+  const currentPage = Math.min(Math.max(page, 0), pageCount - 1);
+  const start = currentPage * pageSize;
+  const end = start + pageSize;
+  const pageLogs = (logs || []).slice(start, end);
+
+  const handlePrev = () => {
+    setPage((p) => Math.max(p - 1, 0));
+  };
+
+  const handleNext = () => {
+    setPage((p) => Math.min(p + 1, pageCount - 1));
   };
 
   return (
@@ -256,54 +276,88 @@ export default function Dashboard({ user, logs }) {
         )}
       </section>
 
-      {/* 最近活动 / 登录记录 */}
+      {/* 最近活动 / 登录记录（分页） */}
       <section className="space-y-3 border-t pt-4">
         <h2 className="text-lg font-semibold">最近记录</h2>
         {(!logs || logs.length === 0) ? (
           <p className="text-sm text-gray-600">暂无记录。</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2 pr-4">时间</th>
-                  <th className="text-left py-2 pr-4">类型</th>
-                  <th className="text-left py-2 pr-4">IP</th>
-                  <th className="text-left py-2 pr-4">方式</th>
-                  <th className="text-left py-2">设备</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.slice(0, 15).map((log, idx) => (
-                  <tr key={idx} className="border-b last:border-none">
-                    <td className="py-2 pr-4">
-                      {formatDate(log.createdAt)}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {log.type === 'login'
-                        ? '登录'
-                        : log.type === 'activity'
-                        ? '活动'
-                        : log.type}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {displayIp(log.ip)}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {log.meta?.provider === 'google'
-                        ? 'Google'
-                        : log.meta?.provider === 'credentials'
-                        ? '邮箱'
-                        : '-'}
-                    </td>
-                    <td className="py-2 text-gray-500 max-w-xs truncate">
-                      {displayUA(log.userAgent)}
-                    </td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 pr-4">时间</th>
+                    <th className="text-left py-2 pr-4">类型</th>
+                    <th className="text-left py-2 pr-4">IP</th>
+                    <th className="text-left py-2 pr-4">方式</th>
+                    <th className="text-left py-2">设备</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {pageLogs.map((log, idx) => (
+                    <tr key={idx} className="border-b last:border-none">
+                      <td className="py-2 pr-4">
+                        {formatDate(log.createdAt)}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {log.type === 'login'
+                          ? '登录'
+                          : log.type === 'activity'
+                          ? '活动'
+                          : log.type}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {displayIp(log.ip)}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {log.meta?.provider === 'google'
+                          ? 'Google'
+                          : log.meta?.provider === 'credentials'
+                          ? '邮箱'
+                          : '-'}
+                      </td>
+                      <td className="py-2 text-gray-500 max-w-xs truncate">
+                        {displayUA(log.userAgent)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 分页控制 */}
+            <div className="flex items-center justify-between mt-3 text-sm text-gray-600">
+              <div>
+                第 <span className="font-semibold">{currentPage + 1}</span> 页 / 共{' '}
+                <span className="font-semibold">{pageCount}</span> 页（共 {total} 条）
+              </div>
+              <div className="space-x-2">
+                <button
+                  onClick={handlePrev}
+                  disabled={currentPage === 0}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === 0
+                      ? 'text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'text-blue-700 border-blue-300 hover:bg-blue-50'
+                  }`}
+                >
+                  上一页
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage >= pageCount - 1}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage >= pageCount - 1
+                      ? 'text-gray-400 border-gray-200 cursor-not-allowed'
+                      : 'text-blue-700 border-blue-300 hover:bg-blue-50'
+                  }`}
+                >
+                  下一页
+                </button>
+              </div>
+            </div>
+          </>
         )}
       </section>
     </div>
