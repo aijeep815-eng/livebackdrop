@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { dbConnect } from '../../../lib/mongodb';
 import User from '../../../models/User';
+import Usage from '../../../models/Usage';
 import bcrypt from 'bcryptjs';
 
 export const authOptions = {
@@ -63,9 +64,11 @@ export const authOptions = {
       return session;
     },
 
-    async signIn({ user, account }) {
+    async signIn({ user, account, req }) {
+      // Google 首次登录时，同步到数据库
+      await dbConnect();
+
       if (account?.provider === 'google') {
-        await dbConnect();
         const existing = await User.findOne({ email: user.email });
         if (!existing) {
           await User.create({
@@ -76,6 +79,30 @@ export const authOptions = {
           });
         }
       }
+
+      // 记录登录日志
+      try {
+        const xf = req.headers['x-forwarded-for'];
+        const ip =
+          (Array.isArray(xf) ? xf[0] : (xf || '')).split(',')[0].trim() ||
+          req.socket?.remoteAddress ||
+          '';
+        const ua = req.headers['user-agent'] || '';
+
+        await Usage.create({
+          userEmail: user.email,
+          type: 'login',
+          ip,
+          userAgent: ua,
+          meta: {
+            provider: account?.provider || 'unknown',
+          },
+        });
+      } catch (e) {
+        // 日志失败不影响登录
+        console.error('login log failed', e.message);
+      }
+
       return true;
     },
   },

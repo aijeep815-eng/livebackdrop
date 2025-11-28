@@ -2,9 +2,10 @@
 import { getSession, useSession } from 'next-auth/react';
 import { dbConnect } from '../lib/mongodb';
 import User from '../models/User';
+import Usage from '../models/Usage';
 import { useState } from 'react';
 
-export default function Dashboard({ user }) {
+export default function Dashboard({ user, logs }) {
   const { data: session } = useSession();
   const displayUser = user || session?.user;
 
@@ -92,8 +93,19 @@ export default function Dashboard({ user }) {
     }
   };
 
+  const loginLogs = (logs || []).filter((l) => l.type === 'login');
+  const lastLogin = loginLogs[0];
+
+  const formatDate = (s) => {
+    try {
+      return new Date(s).toLocaleString();
+    } catch {
+      return s;
+    }
+  };
+
   return (
-    <div className="max-w-2xl mx-auto mt-24 bg-white rounded-lg shadow p-6 space-y-8">
+    <div className="max-w-3xl mx-auto mt-24 bg-white rounded-lg shadow p-6 space-y-8">
       <h1 className="text-2xl font-bold text-center">Account Dashboard</h1>
 
       {/* 基本信息展示 */}
@@ -111,7 +123,15 @@ export default function Dashboard({ user }) {
           <div>
             <p className="text-sm text-gray-500">注册时间</p>
             <p className="text-lg font-medium">
-              {new Date(user.createdAt).toLocaleString()}
+              {formatDate(user.createdAt)}
+            </p>
+          </div>
+        )}
+        {lastLogin && (
+          <div>
+            <p className="text-sm text-gray-500">最近登录时间</p>
+            <p className="text-lg font-medium">
+              {formatDate(lastLogin.createdAt)}
             </p>
           </div>
         )}
@@ -122,7 +142,9 @@ export default function Dashboard({ user }) {
         <h2 className="text-lg font-semibold">修改昵称</h2>
         <form onSubmit={handleNameSave} className="space-y-3 max-w-sm">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Display Name</label>
+            <label className="block text-sm text-gray-600 mb-1">
+              Display Name
+            </label>
             <input
               className="w-full border rounded px-3 py-2"
               value={name}
@@ -136,7 +158,9 @@ export default function Dashboard({ user }) {
             type="submit"
             disabled={nameLoading}
             className={`px-4 py-2 rounded text-white ${
-              nameLoading ? 'bg-gray-400 cursor-wait' : 'bg-blue-700 hover:bg-blue-800'
+              nameLoading
+                ? 'bg-gray-400 cursor-wait'
+                : 'bg-blue-700 hover:bg-blue-800'
             }`}
           >
             {nameLoading ? 'Saving…' : '保存昵称'}
@@ -144,18 +168,20 @@ export default function Dashboard({ user }) {
         </form>
       </section>
 
-      {/* 修改密码（只对有本地密码的账号显示） */}
+      {/* 修改密码 */}
       <section className="space-y-3 border-t pt-4">
         <h2 className="text-lg font-semibold">修改密码</h2>
         {!hasPassword ? (
           <p className="text-sm text-gray-600">
-            当前账号主要通过 Google 登录，尚未设置本地密码。
-            如果后续需要，我们可以增加「为 Google 账号设置邮箱密码」的功能。
+            当前账号主要通过第三方登录，尚未设置本地密码。
+            如需设置本地密码，可以先通过邮箱注册或在未来增加绑定功能。
           </p>
         ) : (
           <form onSubmit={handlePasswordChange} className="space-y-3 max-w-sm">
             <div>
-              <label className="block text-sm text-gray-600 mb-1">当前密码</label>
+              <label className="block text-sm text-gray-600 mb-1">
+                当前密码
+              </label>
               <input
                 type="password"
                 className="w-full border rounded px-3 py-2"
@@ -164,7 +190,9 @@ export default function Dashboard({ user }) {
               />
             </div>
             <div>
-              <label className="block text-sm text-gray-600 mb-1">新密码</label>
+              <label className="block text-sm text-gray-600 mb-1">
+                新密码
+              </label>
               <input
                 type="password"
                 className="w-full border rounded px-3 py-2"
@@ -178,12 +206,57 @@ export default function Dashboard({ user }) {
               type="submit"
               disabled={pwLoading}
               className={`px-4 py-2 rounded text-white ${
-                pwLoading ? 'bg-gray-400 cursor-wait' : 'bg-blue-700 hover:bg-blue-800'
+                pwLoading
+                  ? 'bg-gray-400 cursor-wait'
+                  : 'bg-blue-700 hover:bg-blue-800'
               }`}
             >
               {pwLoading ? 'Updating…' : '保存密码'}
             </button>
           </form>
+        )}
+      </section>
+
+      {/* 最近活动 / 登录记录 */}
+      <section className="space-y-3 border-t pt-4">
+        <h2 className="text-lg font-semibold">最近登录记录</h2>
+        {loginLogs.length === 0 ? (
+          <p className="text-sm text-gray-600">暂无登录记录。</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 pr-4">时间</th>
+                  <th className="text-left py-2 pr-4">IP</th>
+                  <th className="text-left py-2 pr-4">方式</th>
+                  <th className="text-left py-2">设备</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loginLogs.slice(0, 10).map((log, idx) => (
+                  <tr key={idx} className="border-b last:border-none">
+                    <td className="py-2 pr-4">
+                      {formatDate(log.createdAt)}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {log.ip || '-'}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {log.meta?.provider === 'google'
+                        ? 'Google 登录'
+                        : log.meta?.provider === 'credentials'
+                        ? '邮箱登录'
+                        : '其它'}
+                    </td>
+                    <td className="py-2 text-gray-500 max-w-xs truncate">
+                      {log.userAgent || '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
     </div>
@@ -204,6 +277,10 @@ export async function getServerSideProps(context) {
 
   await dbConnect();
   const dbUser = await User.findOne({ email: session.user.email }).lean();
+  const dbLogs = await Usage.find({ userEmail: session.user.email })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
 
   const safeUser = dbUser
     ? {
@@ -223,9 +300,18 @@ export async function getServerSideProps(context) {
         hasPassword: false,
       };
 
+  const safeLogs = dbLogs.map((l) => ({
+    type: l.type,
+    createdAt: l.createdAt ? l.createdAt.toISOString() : null,
+    ip: l.ip || '',
+    userAgent: l.userAgent || '',
+    meta: l.meta || {},
+  }));
+
   return {
     props: {
       user: safeUser,
+      logs: safeLogs,
     },
   };
 }
