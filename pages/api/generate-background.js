@@ -1,71 +1,103 @@
-// pages/api/generate-background.js
-import OpenAI from "openai";
+import { useState } from "react";
 
-const apiKey = process.env.OPENAI_API_KEY;
+export default function AIBackground() {
+  const [prompt, setPrompt] = useState("");
+  const [imageUrl, setImageUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-// 提前创建 client（如果有 key）
-let client = null;
-if (apiKey) {
-  client = new OpenAI({ apiKey });
-}
+  const handleGenerate = async () => {
+    setLoading(true);
+    setImageUrl(null);
+    setErrorMsg("");
 
-export default async function handler(req, res) {
-  // 只允许 POST
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+    try {
+      const res = await fetch("/api/generate-background", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
 
-  // 没有配置 OPENAI_API_KEY
-  if (!apiKey || !client) {
-    return res.status(500).json({
-      error: "OPENAI_API_KEY is missing on the server.",
-      status: 500,
-    });
-  }
+      const data = await res.json();
 
-  const { prompt } = req.body || {};
-
-  if (!prompt || typeof prompt !== "string" || prompt.trim().length < 5) {
-    return res.status(400).json({ error: "Prompt is too short." });
-  }
-
-  try {
-    const finalPrompt = `
-Ultra high resolution 4K cinematic virtual background for live streaming or video calls.
-No text, no logo, no watermark. Clean composition, good lighting, no people.
-Style: professional, realistic, suitable as a Zoom / OBS background.
-User description: ${prompt}
-    `.trim();
-
-    // 注意：这里没有 response_format 字段！
-    const response = await client.images.generate({
-  model: "gpt-image-1",
-  prompt: finalPrompt,
-  n: 1,
-  size: "1536x1024",
-});
-
-
-    const imageUrl = response?.data?.[0]?.url;
-
-    if (!imageUrl) {
-      throw new Error("No image URL returned from OpenAI");
+      if (!res.ok) {
+        setErrorMsg(data.error || "Failed to generate background.");
+      } else {
+        setImageUrl(data.imageUrl);
+      }
+    } catch (err) {
+      setErrorMsg("Network error. Please try again.");
     }
 
-    return res.status(200).json({ imageUrl });
-  } catch (error) {
-    console.error("Error generating background:", error);
+    setLoading(false);
+  };
 
-    const status = error.status || error.statusCode || 500;
+  return (
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+      <h1 style={{ fontSize: "28px", marginBottom: "20px" }}>
+        AI Background Generator
+      </h1>
 
-    return res.status(status).json({
-      error:
-        error?.error?.message ||
-        error?.message ||
-        "Failed to generate background image.",
-      type: error?.error?.type || undefined,
-      status,
-    });
-  }
+      <textarea
+        rows={4}
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Enter your background description..."
+        style={{
+          width: "100%",
+          padding: "10px",
+          border: "1px solid #ccc",
+          borderRadius: "6px",
+        }}
+      />
+
+      <button
+        onClick={handleGenerate}
+        disabled={loading}
+        style={{
+          marginTop: "12px",
+          padding: "10px 20px",
+          background: loading ? "#888" : "#0070f3",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        {loading ? "Generating..." : "Generate Background"}
+      </button>
+
+      {errorMsg && (
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "12px",
+            background: "#ffe5e5",
+            border: "1px solid #ff8b8b",
+            color: "#cc0000",
+            borderRadius: "6px",
+            whiteSpace: "pre-wrap", // 🔥 保证换行完整显示
+          }}
+        >
+          {errorMsg}
+        </div>
+      )}
+
+      {imageUrl && (
+        <div style={{ marginTop: "30px" }}>
+          <h3>Generated Background:</h3>
+          <img
+            src={imageUrl}
+            alt="Generated Background"
+            style={{
+              width: "100%",
+              borderRadius: "8px",
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
