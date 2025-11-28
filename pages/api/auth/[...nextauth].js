@@ -65,9 +65,9 @@ export const authOptions = {
     },
 
     async signIn({ user, account, req }) {
-      // Google 首次登录时，同步到数据库
       await dbConnect();
 
+      // Google 首次登录时，写入用户
       if (account?.provider === 'google') {
         const existing = await User.findOne({ email: user.email });
         if (!existing) {
@@ -80,14 +80,17 @@ export const authOptions = {
         }
       }
 
-      // 记录登录日志
+      // 记录登录日志（失败也不影响登录）
       try {
-        const xf = req.headers['x-forwarded-for'];
+        const xf = req?.headers?.['x-forwarded-for'];
+        const raw = Array.isArray(xf) ? xf[0] : xf || '';
         const ip =
-          (Array.isArray(xf) ? xf[0] : (xf || '')).split(',')[0].trim() ||
-          req.socket?.remoteAddress ||
-          '';
-        const ua = req.headers['user-agent'] || '';
+          (raw || '')
+            .toString()
+            .split(',')[0]
+            .trim() || req?.socket?.remoteAddress || '';
+
+        const ua = req?.headers?.['user-agent'] || '';
 
         await Usage.create({
           userEmail: user.email,
@@ -99,7 +102,6 @@ export const authOptions = {
           },
         });
       } catch (e) {
-        // 日志失败不影响登录
         console.error('login log failed', e.message);
       }
 
