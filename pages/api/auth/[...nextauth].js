@@ -80,15 +80,14 @@ export const authOptions = {
         }
       }
 
-      // 记录登录日志
+      // 记录登录事件（不一定有真实 IP/设备）
       try {
         let ip = 'unknown';
         let ua = 'unknown';
 
         if (req && req.headers) {
           const xf = req.headers['x-forwarded-for'];
-          const raw =
-            Array.isArray(xf) ? xf[0] : (xf || '').toString();
+          const raw = Array.isArray(xf) ? xf[0] : (xf || '').toString();
           const candidate =
             (raw || '')
               .split(',')[0]

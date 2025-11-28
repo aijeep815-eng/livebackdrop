@@ -3,7 +3,7 @@ import { getSession, useSession } from 'next-auth/react';
 import { dbConnect } from '../lib/mongodb';
 import User from '../models/User';
 import Usage from '../models/Usage';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Dashboard({ user, logs }) {
   const { data: session } = useSession();
@@ -19,6 +19,22 @@ export default function Dashboard({ user, logs }) {
   const [pwMsg, setPwMsg] = useState('');
   const [pwErr, setPwErr] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+
+  // 页面加载时记录一次「真实设备 / IP」访问
+  useEffect(() => {
+    const logActivity = async () => {
+      try {
+        await fetch('/api/user/activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+      } catch (e) {
+        // 忽略错误，不影响页面
+      }
+    };
+    logActivity();
+  }, []);
 
   if (!displayUser) {
     return (
@@ -94,7 +110,9 @@ export default function Dashboard({ user, logs }) {
   };
 
   const loginLogs = (logs || []).filter((l) => l.type === 'login');
+  const activityLogs = (logs || []).filter((l) => l.type === 'activity');
   const lastLogin = loginLogs[0];
+  const lastActivity = activityLogs[0];
 
   const formatDate = (s) => {
     try {
@@ -139,9 +157,20 @@ export default function Dashboard({ user, logs }) {
         )}
         {lastLogin && (
           <div>
-            <p className="text-sm text-gray-500">最近登录时间</p>
+            <p className="text-sm text-gray-500">最近登录时间（认证事件）</p>
             <p className="text-lg font-medium">
               {formatDate(lastLogin.createdAt)}
+            </p>
+          </div>
+        )}
+        {lastActivity && (
+          <div>
+            <p className="text-sm text-gray-500">最近活动设备 / IP（真实浏览器）</p>
+            <p className="text-sm text-gray-700">
+              IP：{displayIp(lastActivity.ip)}
+            </p>
+            <p className="text-sm text-gray-700">
+              设备：{displayUA(lastActivity.userAgent)}
             </p>
           </div>
         )}
@@ -229,35 +258,43 @@ export default function Dashboard({ user, logs }) {
 
       {/* 最近活动 / 登录记录 */}
       <section className="space-y-3 border-t pt-4">
-        <h2 className="text-lg font-semibold">最近登录记录</h2>
-        {loginLogs.length === 0 ? (
-          <p className="text-sm text-gray-600">暂无登录记录。</p>
+        <h2 className="text-lg font-semibold">最近记录</h2>
+        {(!logs || logs.length === 0) ? (
+          <p className="text-sm text-gray-600">暂无记录。</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 pr-4">时间</th>
+                  <th className="text-left py-2 pr-4">类型</th>
                   <th className="text-left py-2 pr-4">IP</th>
                   <th className="text-left py-2 pr-4">方式</th>
                   <th className="text-left py-2">设备</th>
                 </tr>
               </thead>
               <tbody>
-                {loginLogs.slice(0, 10).map((log, idx) => (
+                {logs.slice(0, 15).map((log, idx) => (
                   <tr key={idx} className="border-b last:border-none">
                     <td className="py-2 pr-4">
                       {formatDate(log.createdAt)}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {log.type === 'login'
+                        ? '登录'
+                        : log.type === 'activity'
+                        ? '活动'
+                        : log.type}
                     </td>
                     <td className="py-2 pr-4">
                       {displayIp(log.ip)}
                     </td>
                     <td className="py-2 pr-4">
                       {log.meta?.provider === 'google'
-                        ? 'Google 登录'
+                        ? 'Google'
                         : log.meta?.provider === 'credentials'
-                        ? '邮箱登录'
-                        : '其它'}
+                        ? '邮箱'
+                        : '-'}
                     </td>
                     <td className="py-2 text-gray-500 max-w-xs truncate">
                       {displayUA(log.userAgent)}
@@ -289,7 +326,7 @@ export async function getServerSideProps(context) {
   const dbUser = await User.findOne({ email: session.user.email }).lean();
   const dbLogs = await Usage.find({ userEmail: session.user.email })
     .sort({ createdAt: -1 })
-    .limit(20)
+    .limit(50)
     .lean();
 
   const safeUser = dbUser
