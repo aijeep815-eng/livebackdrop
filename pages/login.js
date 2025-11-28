@@ -7,12 +7,12 @@ export default function Login() {
 
   const onSubmit = (e) => {
     e.preventDefault();
-    alert('这里先不做真正的邮箱登录，只是占位。我们先把 Google 登录搞通。');
+    alert('邮箱密码登录后端我们稍后再接，现在先用 Google 登录。');
   };
 
   return (
     <div className="max-w-md mx-auto mt-28 bg-white rounded-lg shadow p-6">
-      <h1 className="text-2xl font-bold mb-4 text-center">Login（简化版）</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
@@ -25,7 +25,6 @@ export default function Login() {
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium mb-1">Password</label>
           <input
@@ -52,11 +51,11 @@ export default function Login() {
       </div>
 
       <a
-        href="/api/auth/signin/google"
+        href="/api/auth/signin/google?callbackUrl=/"
         className="w-full border border-gray-300 rounded py-2 flex items-center justify-center gap-2 hover:bg-gray-100"
       >
         <span className="text-gray-700 font-medium">
-          使用 Google 登录（直接走 NextAuth）
+          使用 Google 登录
         </span>
       </a>
 
