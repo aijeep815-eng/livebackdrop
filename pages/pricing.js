@@ -1,6 +1,5 @@
 // pages/pricing.js
 import NavBar from "../components/NavBar";
-import Footer from "../components/Footer";
 
 const plans = [
   {
@@ -131,7 +130,6 @@ export default function PricingPage() {
                     if (plan.id === "free") {
                       window.location.href = "/register";
                     } else if (plan.id === "creator") {
-                      // Stripe integration will be wired here later
                       alert("Membership payments are coming soon.");
                     } else {
                       window.location.href = "/about";
@@ -174,8 +172,6 @@ export default function PricingPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }
