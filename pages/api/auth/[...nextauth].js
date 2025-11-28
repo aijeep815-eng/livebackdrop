@@ -6,9 +6,8 @@ import { dbConnect } from '../../../lib/mongodb';
 import User from '../../../models/User';
 import bcrypt from 'bcryptjs';
 
-export default NextAuth({
+export const authOptions = {
   providers: [
-    // Email + Password 登录
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
@@ -20,7 +19,6 @@ export default NextAuth({
 
         const user = await User.findOne({ email: credentials.email }).lean();
         if (!user || !user.password) {
-          // 没有用户，或者这个用户是 Google 登录创建的（没有密码）
           return null;
         }
 
@@ -37,7 +35,6 @@ export default NextAuth({
       },
     }),
 
-    // Google 登录
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -53,8 +50,7 @@ export default NextAuth({
   },
 
   callbacks: {
-    async jwt({ token, user, account, profile }) {
-      // 登录时把用户 id 塞进 token
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id || token.sub;
       }
@@ -67,7 +63,6 @@ export default NextAuth({
       return session;
     },
 
-    // Google 首次登录时，如果数据库里还没有该邮箱，可以顺手创建一个用户
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         await dbConnect();
@@ -84,4 +79,6 @@ export default NextAuth({
       return true;
     },
   },
-});
+};
+
+export default NextAuth(authOptions);
