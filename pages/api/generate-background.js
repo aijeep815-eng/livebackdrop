@@ -40,11 +40,12 @@ User description: ${prompt}
 
     // 注意：这里没有 response_format 字段！
     const response = await client.images.generate({
-      model: "gpt-image-1",
-      prompt: finalPrompt,
-      n: 1,
-      size: "1920x1080",
-    });
+  model: "gpt-image-1",
+  prompt: finalPrompt,
+  n: 1,
+  size: "1536x1024",
+});
+
 
     const imageUrl = response?.data?.[0]?.url;
 
