@@ -1,7 +1,6 @@
 // pages/ai-background.js
 import { useState } from "react";
 import NavBar from "../components/NavBar";
-import Footer from "../components/Footer";
 
 export default function AIGenerateBackgroundPage() {
   const [prompt, setPrompt] = useState("");
@@ -13,7 +12,7 @@ export default function AIGenerateBackgroundPage() {
     "modern minimalist home office with soft lighting",
     "cyberpunk neon city street at night, rain, reflections",
     "clean abstract gradient background in blue and purple",
-    "cozy living room with warm light and bookshelf"
+    "cozy living room with warm light and bookshelf",
   ];
 
   const handleUseExample = (text) => {
@@ -41,27 +40,31 @@ export default function AIGenerateBackgroundPage() {
         body: JSON.stringify({ prompt: trimmed }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const text = await res.text();
+      let data = null;
+      try {
+        data = JSON.parse(text);
+      } catch (_) {}
 
       if (!res.ok) {
-        throw new Error(
-          data.error ||
-            data.message ||
-            "Request failed while generating background."
-        );
+        const msg =
+          (data && (data.error || data.message)) ||
+          text ||
+          `Request failed with status ${res.status}`;
+        setErrorMsg(msg);
+        return;
       }
 
-      if (!data.imageUrl) {
-        throw new Error("No image URL returned from server.");
+      const url = data?.imageUrl;
+      if (!url) {
+        setErrorMsg("No image URL returned from server.");
+        return;
       }
 
-      setImageUrl(data.imageUrl);
+      setImageUrl(url);
     } catch (err) {
       console.error(err);
-      setErrorMsg(
-        err?.message ||
-          "Failed to generate background. Please try again in a moment."
-      );
+      setErrorMsg(err?.message || "Failed to generate background. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -78,7 +81,7 @@ export default function AIGenerateBackgroundPage() {
               AI Background Generator
             </h1>
             <p className="mt-2 text-slate-600">
-              Describe the scene you want, and we will generate a 4K virtual background
+              Describe the scene you want, and we will generate a virtual background
               optimized for live streaming and video calls.
             </p>
           </div>
@@ -98,7 +101,7 @@ export default function AIGenerateBackgroundPage() {
                 />
 
                 {errorMsg && (
-                  <p className="text-sm text-red-500 whitespace-pre-wrap">
+                  <p className="whitespace-pre-wrap rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-700">
                     {errorMsg}
                   </p>
                 )}
@@ -160,6 +163,7 @@ export default function AIGenerateBackgroundPage() {
 
             {!loading && imageUrl && (
               <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageUrl}
                   alt="AI generated virtual background"
@@ -170,8 +174,7 @@ export default function AIGenerateBackgroundPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
+      {/* 注意：这里不再渲染 Footer，避免重复；全局 Layout 自己会带 Footer */}
     </div>
   );
 }
