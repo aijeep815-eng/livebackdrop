@@ -3,20 +3,24 @@ import OpenAI from "openai";
 
 const apiKey = process.env.OPENAI_API_KEY;
 
+// 提前创建 client（如果有 key）
 let client = null;
 if (apiKey) {
   client = new OpenAI({ apiKey });
 }
 
 export default async function handler(req, res) {
+  // 只允许 POST
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (!apiKey) {
+  // 没有配置 OPENAI_API_KEY
+  if (!apiKey || !client) {
     return res.status(500).json({
       error: "OPENAI_API_KEY is missing on the server.",
+      status: 500,
     });
   }
 
@@ -34,12 +38,12 @@ Style: professional, realistic, suitable as a Zoom / OBS background.
 User description: ${prompt}
     `.trim();
 
+    // 注意：这里没有 response_format 字段！
     const response = await client.images.generate({
       model: "gpt-image-1",
       prompt: finalPrompt,
       n: 1,
       size: "1920x1080",
-      response_format: "url",
     });
 
     const imageUrl = response?.data?.[0]?.url;
