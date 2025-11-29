@@ -11,10 +11,42 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// 图像实验室每天使用次数（免费用户总共 1 次 / 天）
+const LIMITS = {
+  free: {
+    dailyLabOps: 1,
+  },
+  pro: {
+    dailyLabOps: Infinity,
+  },
+};
+
+function getPlanKey(user = {}) {
+  const raw =
+    user.subscriptionPlan ||
+    user.planName ||
+    user.plan ||
+    user.stripePlan ||
+    '';
+  const lower = raw.toString().toLowerCase();
+
+  if (
+    lower.includes('creator') ||
+    lower.includes('pro') ||
+    lower.includes('unlimited')
+  ) {
+    return 'pro';
+  }
+
+  return 'free';
+}
+
 async function ensureAuth(req, res) {
   const session = await getServerSession(req, res, authOptions);
   if (!session || !session.user || !session.user.id) {
-    res.status(401).json({ error: '请先登录后再使用图像实验室功能。' });
+    res
+      .status(401)
+      .json({ error: '请先登录后再使用图像实验室功能。' });
     return null;
   }
   return session.user;
@@ -25,6 +57,42 @@ function normalizeBody(reqBody) {
   const imageUrl = body.imageUrl;
   const extraPrompt = (body.extraPrompt || '').toString().trim();
   return { imageUrl, extraPrompt };
+}
+
+async function ensureLabLimit(userId, planKey) {
+  const planLimits = LIMITS[planKey] || LIMITS.free;
+
+  if (!Number.isFinite(planLimits.dailyLabOps)) {
+    return { limit: planLimits.dailyLabOps, used: 0 };
+  }
+
+  const now = new Date();
+  const startOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  const used = await Generation.countDocuments({
+    user: userId,
+    createdAt: { $gte: startOfDay },
+    operation: { $in: ['outpaint', 'style', 'cleanup', 'replace'] },
+  });
+
+  if (used >= planLimits.dailyLabOps) {
+    const err = new Error(
+      '你今天的免费图像实验室次数（1 次）已经用完了。可以明天再来，或者前往 /pricing 升级到 CreatorUnlimited，解锁不限量使用。'
+    );
+    err.code = 'LAB_LIMIT_REACHED';
+    err.limit = planLimits.dailyLabOps;
+    err.used = used;
+    throw err;
+  }
+
+  return {
+    limit: planLimits.dailyLabOps,
+    used,
+  };
 }
 
 async function callImageModel(prompt) {
@@ -44,14 +112,20 @@ async function callImageModel(prompt) {
     throw new Error('OpenAI 返回结果中没有图片地址。');
   }
 
-  return { imageUrl: image.url, model: result.model || 'dall-e-2', created: result.created };
+  return {
+    imageUrl: image.url,
+    model: result.model || 'dall-e-2',
+    created: result.created,
+  };
 }
 
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    return res
+      .status(405)
+      .json({ error: `Method ${req.method} Not Allowed` });
   }
 
   try {
@@ -65,6 +139,9 @@ export default async function handler(req, res) {
     }
 
     await dbConnect();
+
+    const planKey = getPlanKey(user);
+    const limitInfo = await ensureLabLimit(user.id, planKey);
 
     const basePrompt =
       'A virtual background suitable for replacing the background behind a person on camera. Soft gradients or simple environment, clear separation between subject area and background, no distracting objects.';
@@ -88,13 +165,31 @@ export default async function handler(req, res) {
       console.error('Failed to log lab replace generation:', logErr);
     }
 
+    const usedAfter = limitInfo.used + 1;
+
     return res.status(200).json({
       imageUrl: result.imageUrl,
       model: result.model,
       created: result.created,
+      planKey,
+      limit: limitInfo.limit,
+      used: usedAfter,
+      remaining: Number.isFinite(limitInfo.limit)
+        ? Math.max(limitInfo.limit - usedAfter, 0)
+        : null,
     });
   } catch (err) {
     console.error('Error in /api/lab/replace:', err);
+
+    if (err.code === 'LAB_LIMIT_REACHED') {
+      return res.status(403).json({
+        error: err.message,
+        code: err.code,
+        limit: err.limit,
+        used: err.used,
+      });
+    }
+
     return res.status(500).json({
       error:
         err?.response?.data?.error?.message ||
