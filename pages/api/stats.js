@@ -1,9 +1,11 @@
 // pages/api/stats.js
+// 返回当前登录用户的使用统计：AI 生成次数、上传素材次数
+
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from './auth/[...nextauth]';
 import dbConnect from '../../lib/dbConnect';
-import Upload from '../../models/Upload';
 import Generation from '../../models/Generation';
+import Upload from '../../models/Upload';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -13,42 +15,30 @@ export default async function handler(req, res) {
       .json({ error: `Method ${req.method} Not Allowed` });
   }
 
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user || !session.user.id) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-
   try {
-    await dbConnect();
-    const userId = session.user.id;
+    const session = await getServerSession(req, res, authOptions);
 
-    const [uploadCount, generationCount] = await Promise.all([
-      Upload.countDocuments({ user: userId }),
-      Generation.countDocuments({ user: userId }),
-    ]);
-
-    const planName =
-      session.user.planName ||
-      session.user.plan ||
-      session.user.subscriptionPlan ||
-      'Free';
-
-    let currentRights = '';
-    if (planName.toLowerCase().startsWith('free')) {
-      currentRights = '免费用户：每天可生成有限数量背景，适合轻量使用。';
-    } else {
-      currentRights =
-        '付费用户：可享受更高的生成次数、更快的队列以及更高优先级支持。';
+    if (!session || !session.user || !session.user.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    await dbConnect();
+
+    const userId = session.user.id;
+
+    const [totalGenerations, totalUploads] = await Promise.all([
+      Generation.countDocuments({ user: userId }),
+      Upload.countDocuments({ user: userId }),
+    ]);
+
     return res.status(200).json({
-      uploadCount,
-      generationCount,
-      currentRights,
+      totalGenerations,
+      totalUploads,
     });
   } catch (err) {
-    console.error('Error loading stats:', err);
-    return res.status(500).json({ error: 'Failed to load stats' });
+    console.error('Error in /api/stats:', err);
+    return res.status(500).json({
+      error: err.message || 'Failed to load stats.',
+    });
   }
 }
