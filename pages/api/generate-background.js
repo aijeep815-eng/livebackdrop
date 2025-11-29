@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "./auth/[...nextauth]";
 import { connectMongoUsage } from "../../lib/mongoConnectUsage";
 import UserUsage from "../../models/UserUsage";
+import Subscription from "../../models/Subscription";
 
 const apiKey = process.env.OPENAI_API_KEY;
 const DAILY_LIMIT = 5;
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
 
   const user = session.user;
   const userId = user.id || user._id || user.email;
+  const email = user.email;
 
   if (!userId) {
     return res.status(401).json({
@@ -60,20 +62,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 先检查今日使用次数
     await connectMongoUsage();
     const today = getTodayString();
 
-    let usage = await UserUsage.findOne({ userId, date: today });
+    // 判断是否为付费会员
+    let isPremium = false;
+    if (email) {
+      const sub = await Subscription.findOne({
+        email,
+        status: "active",
+      }).lean();
+      if (sub) {
+        isPremium = true;
+      }
+    }
 
-    if (usage && usage.count >= DAILY_LIMIT) {
-      return res.status(429).json({
-        error:
-          "Daily AI generation limit reached for your free plan. Please try again tomorrow or upgrade your membership (coming soon).",
-        code: "DAILY_LIMIT_REACHED",
-        limit: DAILY_LIMIT,
-        count: usage.count,
-      });
+    // 免费用户才检查每日次数
+    if (!isPremium) {
+      let usage = await UserUsage.findOne({ userId, date: today });
+
+      if (usage && usage.count >= DAILY_LIMIT) {
+        return res.status(429).json({
+          error:
+            "Daily AI generation limit reached for your free plan. Please try again tomorrow or upgrade your membership (coming soon).",
+          code: "DAILY_LIMIT_REACHED",
+          limit: DAILY_LIMIT,
+          count: usage.count,
+        });
+      }
     }
 
     const finalPrompt = `
@@ -96,12 +112,14 @@ User description: ${prompt}
       throw new Error("No image URL returned from OpenAI");
     }
 
-    // 调用成功后再记录使用次数
-    await UserUsage.findOneAndUpdate(
-      { userId, date: today },
-      { $inc: { count: 1 } },
-      { upsert: true, new: true }
-    );
+    // 只有免费用户才累加使用次数；付费用户不受限制
+    if (!isPremium) {
+      await UserUsage.findOneAndUpdate(
+        { userId, date: today },
+        { $inc: { count: 1 } },
+        { upsert: true, new: true }
+      );
+    }
 
     return res.status(200).json({ imageUrl });
   } catch (error) {

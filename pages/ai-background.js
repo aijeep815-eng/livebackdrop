@@ -8,11 +8,11 @@ export default function AIGenerateBackgroundPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 真实使用次数（从后台获取）
-  const DEFAULT_DAILY_LIMIT = 5;
   const [usedToday, setUsedToday] = useState(0);
-  const [dailyLimit, setDailyLimit] = useState(DEFAULT_DAILY_LIMIT);
+  const [dailyLimit, setDailyLimit] = useState(5);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [plan, setPlan] = useState("guest");
+  const [isPremium, setIsPremium] = useState(false);
 
   const examplePrompts = [
     "modern minimalist home office with soft lighting",
@@ -21,24 +21,18 @@ export default function AIGenerateBackgroundPage() {
     "cozy living room with warm light and bookshelf",
   ];
 
-  // 页面加载时，先拿一次今日使用情况
   useEffect(() => {
     const fetchUsage = async () => {
       try {
         const res = await fetch("/api/usage/today");
         if (!res.ok) return;
         const data = await res.json();
-        if (typeof data.count === "number") {
-          setUsedToday(data.count);
-        }
-        if (typeof data.limit === "number") {
-          setDailyLimit(data.limit);
-        }
-        if (typeof data.loggedIn === "boolean") {
-          setLoggedIn(data.loggedIn);
-        }
+        if (typeof data.count === "number") setUsedToday(data.count);
+        if (typeof data.limit === "number") setDailyLimit(data.limit);
+        if (typeof data.loggedIn === "boolean") setLoggedIn(data.loggedIn);
+        if (typeof data.plan === "string") setPlan(data.plan);
+        if (typeof data.isPremium === "boolean") setIsPremium(data.isPremium);
       } catch (e) {
-        // 静默失败，不影响主流程
         console.error("Failed to fetch usage info:", e);
       }
     };
@@ -95,11 +89,7 @@ export default function AIGenerateBackgroundPage() {
 
       setImageUrl(url);
 
-      // 成功生成后，前端计数 +1（真实数据以后也会在后台累加）
-      setUsedToday((prev) => {
-        const next = prev + 1;
-        return next;
-      });
+      setUsedToday((prev) => prev + 1);
     } catch (err) {
       console.error(err);
       setErrorMsg(err?.message || "Failed to generate background. Please try again.");
@@ -109,11 +99,11 @@ export default function AIGenerateBackgroundPage() {
   };
 
   const usagePercent =
-    dailyLimit > 0
-      ? Math.min(100, Math.round((usedToday / dailyLimit) * 100))
-      : 0;
+    dailyLimit > 0 ? Math.min(100, Math.round((usedToday / dailyLimit) * 100)) : 0;
 
-  const reachedLimit = dailyLimit > 0 && usedToday >= dailyLimit;
+  const reachedLimit = !isPremium && dailyLimit > 0 && usedToday >= dailyLimit;
+
+  const planLabel = !loggedIn ? "Guest" : isPremium ? "Creator" : "Free";
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -132,16 +122,20 @@ export default function AIGenerateBackgroundPage() {
               </p>
             </div>
 
-            {/* 使用情况 / 会员小卡片（真实数据接入版） */}
+            {/* 使用情况 / 会员小卡片 */}
             <div className="w-full max-w-xs rounded-2xl border border-sky-100 bg-white px-4 py-3 text-sm shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-slate-800">
-                  Plan: {loggedIn ? "Free" : "Guest"}
+                  Plan: {planLabel}
                 </span>
-                <span className="text-xs text-sky-700">Usage today</span>
+                <span className="text-xs text-sky-700">
+                  {isPremium ? "Unlimited" : "Daily limit"}
+                </span>
               </div>
               <p className="mt-1 text-xs text-slate-500 md:text-sm">
-                {loggedIn ? (
+                {isPremium ? (
+                  <>You can generate as many AI backgrounds as you need.</>
+                ) : loggedIn ? (
                   <>
                     Today:{" "}
                     <span className="font-semibold text-slate-800">{usedToday}</span>
@@ -152,23 +146,37 @@ export default function AIGenerateBackgroundPage() {
                     AI generations
                   </>
                 ) : (
-                  <>Sign in to track your daily AI generations.</>
+                  <>Sign in to start generating and track your daily AI limit.</>
                 )}
               </p>
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-sky-500 transition-all"
-                  style={{ width: `${usagePercent}%` }}
-                />
-              </div>
+              {!isPremium && (
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-sky-500 transition-all"
+                    style={{ width: `${usagePercent}%` }}
+                  />
+                </div>
+              )}
               <button
                 type="button"
                 className="mt-3 w-full rounded-xl border border-sky-500/60 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
-                onClick={() => {
-                  window.location.href = "/pricing";
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/stripe/create-checkout-session", {
+                      method: "POST",
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.url) {
+                      window.location.href = data.url;
+                    } else {
+                      alert(data.error || "Failed to start checkout.");
+                    }
+                  } catch (e) {
+                    alert("Failed to start checkout.");
+                  }
                 }}
               >
-                Upgrade plan (coming soon)
+                {isPremium ? "Manage subscription (coming soon)" : "Upgrade plan"}
               </button>
             </div>
           </div>

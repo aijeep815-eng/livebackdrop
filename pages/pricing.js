@@ -8,7 +8,7 @@ const plans = [
     price: "$0",
     highlight: "Best for trying LiveBackdrop",
     features: [
-      "Up to 5 AI generations per day (preview UI)",
+      "Up to 5 AI generations per day (free plan)",
       "Upload & preview your own backgrounds",
       "Basic download support",
       "Email-based account",
@@ -20,15 +20,15 @@ const plans = [
     id: "creator",
     name: "Creator",
     price: "$9.99",
-    priceNote: "/month (coming soon)",
+    priceNote: "/month",
     highlight: "For streamers & content creators",
     features: [
-      "High priority AI background generation",
-      "Higher resolution outputs when available",
+      "Unlimited AI background generation",
+      "Higher quality outputs as they become available",
       "Early access to new styles & presets",
       "Priority support",
     ],
-    cta: "Coming soon",
+    cta: "Upgrade to Creator",
     popular: true,
   },
   {
@@ -48,6 +48,32 @@ const plans = [
 ];
 
 export default function PricingPage() {
+  const handlePlanClick = async (planId) => {
+    if (planId === "free") {
+      window.location.href = "/register";
+      return;
+    }
+    if (planId === "creator") {
+      try {
+        const res = await fetch("/api/stripe/create-checkout-session", {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          window.location.href = data.url;
+        } else {
+          alert(data.error || "Failed to start checkout.");
+        }
+      } catch (e) {
+        alert("Failed to start checkout.");
+      }
+      return;
+    }
+    if (planId === "studio") {
+      window.location.href = "/about";
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <NavBar />
@@ -69,11 +95,11 @@ export default function PricingPage() {
             </p>
           </div>
 
-          {/* 提示信息：Stripe / 会员即将上线 */}
+          {/* 提示信息 */}
           <div className="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-xs text-amber-900 md:text-sm">
-            <strong className="font-semibold">Heads up:</strong>{" "}
-            Payments and full membership features are still under construction. You can
-            explore the plans now; upgrade will be enabled in a future release.
+            <strong className="font-semibold">Note:</strong>{" "}
+            Payments are enabled via Stripe Checkout. After you complete payment, your
+            Creator plan will be activated automatically within a short time.
           </div>
 
           {/* 价格卡片 */}
@@ -126,49 +152,12 @@ export default function PricingPage() {
                       ? "bg-sky-600 text-white hover:bg-sky-700"
                       : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
                   } transition`}
-                  onClick={() => {
-                    if (plan.id === "free") {
-                      window.location.href = "/register";
-                    } else if (plan.id === "creator") {
-                      alert("Membership payments are coming soon.");
-                    } else {
-                      window.location.href = "/about";
-                    }
-                  }}
+                  onClick={() => handlePlanClick(plan.id)}
                 >
                   {plan.cta}
                 </button>
               </div>
             ))}
-          </div>
-
-          {/* FAQ 简短说明 */}
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-xs text-slate-600 md:p-5 md:text-sm">
-            <h3 className="text-sm font-semibold text-slate-900 md:text-base">
-              Frequently asked
-            </h3>
-            <div className="mt-3 space-y-2">
-              <div>
-                <p className="font-medium text-slate-800">
-                  Can I use LiveBackdrop for free?
-                </p>
-                <p className="text-xs text-slate-600 md:text-sm">
-                  Yes. The Free plan lets you try AI generation with a daily limit and test
-                  uploaded backgrounds. It&apos;s perfect for evaluating if LiveBackdrop
-                  fits your workflow.
-                </p>
-              </div>
-              <div>
-                <p className="font-medium text-slate-800">
-                  When will paid memberships be available?
-                </p>
-                <p className="text-xs text-slate-600 md:text-sm">
-                  We&apos;re currently wiring up Stripe integration and stabilizing AI
-                  generation. Once everything is ready for production use, the Creator plan
-                  will be activated for monthly billing.
-                </p>
-              </div>
-            </div>
           </div>
         </section>
       </main>
