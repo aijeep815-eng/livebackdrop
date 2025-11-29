@@ -1,51 +1,44 @@
 // pages/profile.js
-import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
-import Head from 'next/head';
+// 用户中心页面：展示基本信息、当前订阅、使用概况
+// 本版本增加：点击“已生成背景数”跳转到 /history，点击“已上传素材数”跳转到 /uploads。
 
-function getInitials(nameOrEmail) {
-  if (!nameOrEmail) return '?';
-  const name = nameOrEmail.split('@')[0];
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
-}
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import Head from 'next/head';
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [stats, setStats] = useState({
-    generationCount: null,
-    uploadCount: null,
-    currentRights: '',
+    totalGenerations: 0,
+    totalUploads: 0,
   });
+  const [loadingStats, setLoadingStats] = useState(true);
   const [statsError, setStatsError] = useState('');
 
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchStats();
+      loadStats();
     }
   }, [status]);
 
-  async function fetchStats() {
+  async function loadStats() {
     try {
+      setLoadingStats(true);
       setStatsError('');
       const res = await fetch('/api/stats');
-      if (!res.ok) {
-        throw new Error('Failed to load stats');
-      }
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to load stats');
+      }
       setStats({
-        generationCount:
-          typeof data.generationCount === 'number'
-            ? data.generationCount
-            : null,
-        uploadCount:
-          typeof data.uploadCount === 'number' ? data.uploadCount : null,
-        currentRights: data.currentRights || '',
+        totalGenerations: data.totalGenerations || 0,
+        totalUploads: data.totalUploads || 0,
       });
     } catch (err) {
-      console.error('Fetch stats error:', err);
-      setStatsError('使用统计加载失败，稍后再试。');
+      console.error('load stats error', err);
+      setStatsError(err.message || '加载使用统计失败。');
+    } finally {
+      setLoadingStats(false);
     }
   }
 
@@ -63,7 +56,7 @@ export default function ProfilePage() {
         <div className="bg-white shadow rounded-2xl px-8 py-6 max-w-md text-center">
           <h1 className="text-2xl font-semibold mb-4">请先登录</h1>
           <p className="text-slate-600 mb-4">
-            用户中心需要账户登录。请先登录或注册，然后再访问本页面。
+            查看用户中心需要登录账户。请先登录或注册，然后再访问本页面。
           </p>
           <a
             href="/auth/signin"
@@ -78,111 +71,112 @@ export default function ProfilePage() {
 
   const user = session.user || {};
   const planName =
+    user.subscriptionPlan ||
     user.planName ||
     user.plan ||
-    user.subscriptionPlan ||
     'Free / 未开通订阅';
-  const subscriptionStatus =
-    user.subscriptionStatus ||
-    user.status ||
-    '正常';
 
-  const generationCountText =
-    stats.generationCount == null ? '—' : stats.generationCount;
-  const uploadCountText =
-    stats.uploadCount == null ? '—' : stats.uploadCount;
-  const rightsText =
-    stats.currentRights ||
-    (planName.startsWith('Free')
-      ? '免费用户：每天可生成有限数量背景'
-      : '付费用户：可享受更高的生成次数和优先队列');
+  const planStatusText = '正常';
 
   return (
     <>
       <Head>
-        <title>Profile – LiveBackdrop</title>
+        <title>用户中心 – LiveBackdrop</title>
       </Head>
       <div className="min-h-screen bg-slate-50 py-10 px-4">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6 text-slate-900">
-            用户中心
-          </h1>
-
-          {/* 基本信息卡片 */}
-          <div className="bg-white rounded-2xl shadow p-6 mb-6 flex flex-col sm:flex-row gap-4 sm:items-center">
-            <div className="flex-shrink-0">
-              <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-xl font-semibold">
-                {getInitials(user.name || user.email)}
-              </div>
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* 基本信息 */}
+          <section className="bg-white rounded-2xl shadow p-6 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-semibold">
+              {user.name
+                ? user.name[0]?.toUpperCase()
+                : user.email?.[0]?.toUpperCase() || 'U'}
             </div>
-            <div className="flex-1">
-              <p className="text-sm uppercase tracking-wide text-slate-400 mb-1">
-                基本信息
-              </p>
+            <div>
+              <p className="text-sm text-slate-500 mb-1">基本信息</p>
               <p className="text-lg font-semibold text-slate-900">
                 {user.name || '未设置昵称'}
               </p>
               <p className="text-sm text-slate-600">{user.email}</p>
             </div>
-          </div>
+          </section>
 
-          {/* 订阅信息 */}
-          <div className="bg-white rounded-2xl shadow p-6 mb-6">
-            <p className="text-sm uppercase tracking-wide text-slate-400 mb-2">
-              当前订阅
-            </p>
-            <p className="text-lg font-semibold text-slate-900 mb-1">
-              {planName}
-            </p>
-            <p className="text-sm text-slate-600 mb-4">
-              状态：{subscriptionStatus}
-            </p>
+          {/* 当前订阅 */}
+          <section className="bg-white rounded-2xl shadow p-6">
+            <p className="text-sm text-slate-500 mb-2">当前订阅</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+              <p className="text-lg font-semibold text-slate-900">
+                {planName}
+              </p>
+              <p className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                状态：{planStatusText}
+              </p>
+            </div>
             <p className="text-xs text-slate-500">
-              若你刚刚升级了套餐，可以尝试刷新页面。如果套餐信息与右上角显示不一致，
-              以后我们会在这里同步显示 Stripe 的详细数据（到期时间、续费方式等）。
+              若你刚刚升级了套餐，可以尝试刷新页面。如果套餐信息与右上角显示不一致，以后我们会在这里同步显示 Stripe 的详细数据（到期时间、续费方式等）。
             </p>
-          </div>
+          </section>
 
-          {/* 使用情况概要 */}
-          <div className="bg-white rounded-2xl shadow p-6 mb-6">
-            <p className="text-sm uppercase tracking-wide text-slate-400 mb-3">
-              使用概况
-            </p>
+          {/* 使用概况 */}
+          <section className="bg-white rounded-2xl shadow p-6">
+            <p className="text-sm text-slate-500 mb-3">使用概况（预留区）</p>
 
             {statsError && (
               <p className="text-xs text-red-600 mb-2">{statsError}</p>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {generationCountText}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* 已生成背景数 → /history */}
+              <a
+                href="/history"
+                className="group border border-slate-200 rounded-2xl px-4 py-3 hover:border-blue-500 hover:bg-blue-50/40 transition flex flex-col justify-between"
+              >
+                <div>
+                  <p className="text-2xl font-semibold text-slate-900 group-hover:text-blue-700">
+                    {loadingStats ? '—' : stats.totalGenerations}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    已生成背景数
+                  </p>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400 group-hover:text-blue-600">
+                  点击查看 AI 生成历史记录。
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  已生成背景数
+              </a>
+
+              {/* 已上传素材数 → /uploads */}
+              <a
+                href="/uploads"
+                className="group border border-slate-200 rounded-2xl px-4 py-3 hover:border-blue-500 hover:bg-blue-50/40 transition flex flex-col justify-between"
+              >
+                <div>
+                  <p className="text-2xl font-semibold text-slate-900 group-hover:text-blue-700">
+                    {loadingStats ? '—' : stats.totalUploads}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    已上传素材数
+                  </p>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400 group-hover:text-blue-600">
+                  点击进入素材管理页面。
                 </p>
-              </div>
-              <div>
-                <p className="text-2xl font-semibold text-slate-900">
-                  {uploadCountText}
+              </a>
+
+              {/* 当前权益说明 */}
+              <div className="border border-slate-200 rounded-2xl px-4 py-3 flex flex-col justify-between">
+                <div>
+                  <p className="text-xs text-slate-500 mb-1">当前权益</p>
+                  <p className="text-sm font-medium text-slate-800">
+                    免费用户：每天可生成有限数量背景，适合轻量使用。
+                  </p>
+                </div>
+                <p className="mt-2 text-[11px] text-slate-400">
+                  使用统计来自你的真实历史数据：AI 生成记录与素材上传记录。以后我们可以增加更多维度（按日期统计、本月使用情况等），用于帮助你规划套餐与使用策略。
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  已上传素材数
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-slate-700 leading-snug">
-                  {rightsText}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">当前权益</p>
               </div>
             </div>
-
-            <p className="text-xs text-slate-500 mt-4">
-              使用统计来自你的真实历史数据：AI 生成记录与素材上传记录。以后我们可以增加更多维度
-              （按日期统计、本月使用情况等），用于帮助你规划套餐与使用频率。
-            </p>
-          </div>
+          </section>
         </div>
       </div>
     </>
