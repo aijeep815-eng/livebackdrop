@@ -1,7 +1,6 @@
-// pages/api/ai/generate.js
-// 统一的 AI 背景生成接口：返回 { imageUrl }
-// 如果前端看到“接口 /api/ai/generate 调用失败”，通常就是这里报错了。
-// 你可以用这个文件直接覆盖原来的 /pages/api/ai/generate.js。
+// Unified AI background generation endpoint
+// This file is safe to use for BOTH /api/generate and /api/ai/generate.
+// It always uses a valid OpenAI image size (1536x1024).
 
 import OpenAI from 'openai';
 
@@ -57,7 +56,7 @@ export default async function handler(req, res) {
     const result = await openai.images.generate({
       model: 'gpt-image-1',
       prompt: finalPrompt,
-      size: '1024x576', // 适合横向直播背景
+      size: '1536x1024', // ✅ valid size
       n: 1,
     });
 
@@ -84,7 +83,6 @@ export default async function handler(req, res) {
       err?.message ||
       'OpenAI 调用失败，请稍后再试。';
 
-    // 把具体错误传给前端，方便你调试
     return res.status(500).json({ error: message });
   }
 }

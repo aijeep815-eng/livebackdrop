@@ -1,5 +1,6 @@
-// pages/api/ai/generate.js
-// 统一的 AI 背景生成接口：返回 { imageUrl }
+// Unified AI background generation endpoint
+// This file is safe to use for BOTH /api/generate and /api/ai/generate.
+// It always uses a valid OpenAI image size (1536x1024).
 
 import OpenAI from 'openai';
 
@@ -55,7 +56,7 @@ export default async function handler(req, res) {
     const result = await openai.images.generate({
       model: 'gpt-image-1',
       prompt: finalPrompt,
-      size: '1536x1024', // ✅ 合法的横向尺寸
+      size: '1536x1024', // ✅ valid size
       n: 1,
     });
 
