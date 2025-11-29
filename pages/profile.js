@@ -1,6 +1,6 @@
 // pages/profile.js
-// 用户中心页面：展示基本信息、当前订阅、使用概况
-// 本版本增加：点击“已生成背景数”跳转到 /history，点击“已上传素材数”跳转到 /uploads。
+// 用户中心：展示基本信息、当前订阅、使用概况
+// 文案中写清楚 Free 每日上限：生成 5 张、上传 10 张。
 
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
@@ -168,11 +168,14 @@ export default function ProfilePage() {
                 <div>
                   <p className="text-xs text-slate-500 mb-1">当前权益</p>
                   <p className="text-sm font-medium text-slate-800">
-                    免费用户：每天可生成有限数量背景，适合轻量使用。
+                    免费用户：每天最多生成 5 张虚拟背景，
+                    最多上传 10 张素材。
                   </p>
                 </div>
                 <p className="mt-2 text-[11px] text-slate-400">
-                  使用统计来自你的真实历史数据：AI 生成记录与素材上传记录。以后我们可以增加更多维度（按日期统计、本月使用情况等），用于帮助你规划套餐与使用策略。
+                  使用统计来自你的真实历史数据：AI 生成记录与素材上传记录。
+                  以后我们可以增加更多维度（按日期统计、本月使用情况等），
+                  用于帮助你规划套餐与使用策略。升级 CreatorUnlimited 后，我们可以取消次数限制。
                 </p>
               </div>
             </div>

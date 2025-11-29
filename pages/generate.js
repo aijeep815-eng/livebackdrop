@@ -1,62 +1,11 @@
 // pages/generate.js
-// 主生成页面：带提示词模板 + 自动写入生成历史记录
-// 这里不再写死一个接口路径，而是尝试多个候选路径，
-// 以兼容你项目之前已经在用的生成接口。
+// 前端生成页面：使用带次数限制的 /api/generate-background 接口
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 
-const CANDIDATE_ENDPOINTS = [
-  '/api/generate',
-  '/api/generate-background',
-  '/api/background/generate',
-  '/api/ai/generate',
-];
-
-async function callGenerateAPI(payload) {
-  let lastError = null;
-
-  for (const endpoint of CANDIDATE_ENDPOINTS) {
-    try {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        // 404 继续尝试下一个，其他错误直接抛出
-        if (res.status === 404) {
-          lastError =
-            data.error ||
-            `接口 ${endpoint} 返回 404（未找到），尝试下一个候选路径。`;
-          continue;
-        }
-        throw new Error(data.error || `接口 ${endpoint} 调用失败`);
-      }
-
-      if (!data.imageUrl) {
-        // 如果没有返回 imageUrl，当作失败
-        throw new Error(
-          data.error ||
-            `接口 ${endpoint} 没有返回 imageUrl 字段，无法显示图片。`
-        );
-      }
-
-      return { data, endpointUsed: endpoint };
-    } catch (err) {
-      lastError = err.message || String(err);
-    }
-  }
-
-  throw new Error(
-    lastError ||
-      '所有候选生成接口都调用失败，请检查后端接口路径是否变更。'
-  );
-}
+const GENERATE_API_PATH = '/api/generate-background';
 
 export default function GeneratePage() {
   const { data: session, status } = useSession();
@@ -183,45 +132,26 @@ export default function GeneratePage() {
     setImageUrl('');
 
     try {
-      const payload = {
-        prompt: prompt.trim(),
-        style: style || undefined,
-      };
+      const res = await fetch(GENERATE_API_PATH, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          style: style || undefined,
+        }),
+      });
 
-      const { data, endpointUsed } = await callGenerateAPI(payload);
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.error || '生成失败，请稍后再试。');
+      }
+
+      if (!data.imageUrl) {
+        throw new Error('生成接口没有返回 imageUrl。');
+      }
 
       setImageUrl(data.imageUrl);
-
-      // 记录到生成历史（失败不影响用户体验）
-      try {
-        await fetch('/api/generations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            imageUrl: data.imageUrl,
-            thumbUrl: data.imageUrl,
-            prompt: prompt.trim(),
-            style: style || undefined,
-            planAtGeneration:
-              data.plan ||
-              data.planName ||
-              data.subscriptionPlan ||
-              (session?.user?.planName ||
-                session?.user?.plan ||
-                session?.user?.subscriptionPlan ||
-                'unknown'),
-            creditsCost: 1,
-            meta: {
-              source: 'generate-main',
-              endpointUsed,
-            },
-          }),
-        });
-      } catch (logErr) {
-        console.error('log generation failed', logErr);
-      }
     } catch (err) {
       console.error(err);
       setError(err.message || '生成失败，请稍后再试。');
@@ -260,7 +190,7 @@ export default function GeneratePage() {
   return (
     <>
       <Head>
-        <title>Generate – LiveBackdrop</title>
+        <title>生成虚拟背景 – LiveBackdrop</title>
       </Head>
       <div className="min-h-screen bg-slate-50 py-10 px-4">
         <div className="max-w-5xl mx-auto grid gap-8 md:grid-cols-[3fr,2fr]">
@@ -364,6 +294,7 @@ export default function GeneratePage() {
             </form>
 
             <p className="text-[11px] text-slate-400 mt-4">
+              免费用户每天可生成有限数量的虚拟背景（例如 5 张），超过次数后会提示明天再来或升级套餐。
               每次生成成功后，我们会自动把结果记录到你的“AI 生成历史”页面，
               方便你以后再次下载或对比不同版本。
             </p>
