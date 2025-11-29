@@ -1,11 +1,24 @@
 // pages/api/generate-background.js
 import OpenAI from "openai";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./auth/[...nextauth]";
+import { connectMongoUsage } from "../../lib/mongoConnectUsage";
+import UserUsage from "../../models/UserUsage";
 
 const apiKey = process.env.OPENAI_API_KEY;
+const DAILY_LIMIT = 5;
 
 let client = null;
 if (apiKey) {
   client = new OpenAI({ apiKey });
+}
+
+function getTodayString() {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export default async function handler(req, res) {
@@ -21,6 +34,25 @@ export default async function handler(req, res) {
     });
   }
 
+  const session = await getServerSession(req, res, authOptions);
+
+  if (!session || !session.user) {
+    return res.status(401).json({
+      error: "You must be logged in to generate AI backgrounds.",
+      code: "NOT_AUTHENTICATED",
+    });
+  }
+
+  const user = session.user;
+  const userId = user.id || user._id || user.email;
+
+  if (!userId) {
+    return res.status(401).json({
+      error: "User information is incomplete. Please log in again.",
+      code: "MISSING_USER_ID",
+    });
+  }
+
   const { prompt } = req.body || {};
 
   if (!prompt || typeof prompt !== "string" || prompt.trim().length < 5) {
@@ -28,6 +60,22 @@ export default async function handler(req, res) {
   }
 
   try {
+    // 先检查今日使用次数
+    await connectMongoUsage();
+    const today = getTodayString();
+
+    let usage = await UserUsage.findOne({ userId, date: today });
+
+    if (usage && usage.count >= DAILY_LIMIT) {
+      return res.status(429).json({
+        error:
+          "Daily AI generation limit reached for your free plan. Please try again tomorrow or upgrade your membership (coming soon).",
+        code: "DAILY_LIMIT_REACHED",
+        limit: DAILY_LIMIT,
+        count: usage.count,
+      });
+    }
+
     const finalPrompt = `
 Ultra high resolution cinematic virtual background for live streaming or video calls.
 No text, no logo, no watermark. Clean composition, good lighting, no people.
@@ -47,6 +95,13 @@ User description: ${prompt}
     if (!imageUrl) {
       throw new Error("No image URL returned from OpenAI");
     }
+
+    // 调用成功后再记录使用次数
+    await UserUsage.findOneAndUpdate(
+      { userId, date: today },
+      { $inc: { count: 1 } },
+      { upsert: true, new: true }
+    );
 
     return res.status(200).json({ imageUrl });
   } catch (error) {

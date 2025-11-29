@@ -1,5 +1,5 @@
 // pages/ai-background.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 
 export default function AIGenerateBackgroundPage() {
@@ -8,10 +8,11 @@ export default function AIGenerateBackgroundPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // 🔹 会员 / 使用次数 UI 预留（当前是前端预览，不连后台）
-  const PLAN_NAME = "Free";
-  const DAILY_LIMIT = 5;
+  // 真实使用次数（从后台获取）
+  const DEFAULT_DAILY_LIMIT = 5;
   const [usedToday, setUsedToday] = useState(0);
+  const [dailyLimit, setDailyLimit] = useState(DEFAULT_DAILY_LIMIT);
+  const [loggedIn, setLoggedIn] = useState(false);
 
   const examplePrompts = [
     "modern minimalist home office with soft lighting",
@@ -19,6 +20,30 @@ export default function AIGenerateBackgroundPage() {
     "clean abstract gradient background in blue and purple",
     "cozy living room with warm light and bookshelf",
   ];
+
+  // 页面加载时，先拿一次今日使用情况
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        const res = await fetch("/api/usage/today");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (typeof data.count === "number") {
+          setUsedToday(data.count);
+        }
+        if (typeof data.limit === "number") {
+          setDailyLimit(data.limit);
+        }
+        if (typeof data.loggedIn === "boolean") {
+          setLoggedIn(data.loggedIn);
+        }
+      } catch (e) {
+        // 静默失败，不影响主流程
+        console.error("Failed to fetch usage info:", e);
+      }
+    };
+    fetchUsage();
+  }, []);
 
   const handleUseExample = (text) => {
     setPrompt(text);
@@ -70,10 +95,10 @@ export default function AIGenerateBackgroundPage() {
 
       setImageUrl(url);
 
-      // 本地前端预览：成功生成一次，就+1（真实限制以后放在后台）
+      // 成功生成后，前端计数 +1（真实数据以后也会在后台累加）
       setUsedToday((prev) => {
-        if (prev >= DAILY_LIMIT) return prev;
-        return prev + 1;
+        const next = prev + 1;
+        return next;
       });
     } catch (err) {
       console.error(err);
@@ -83,8 +108,12 @@ export default function AIGenerateBackgroundPage() {
     }
   };
 
-  // 计算进度百分比（用于进度条显示）
-  const usagePercent = Math.min(100, Math.round((usedToday / DAILY_LIMIT) * 100));
+  const usagePercent =
+    dailyLimit > 0
+      ? Math.min(100, Math.round((usedToday / dailyLimit) * 100))
+      : 0;
+
+  const reachedLimit = dailyLimit > 0 && usedToday >= dailyLimit;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -103,16 +132,28 @@ export default function AIGenerateBackgroundPage() {
               </p>
             </div>
 
-            {/* 使用情况 / 会员小卡片（UI 预览） */}
+            {/* 使用情况 / 会员小卡片（真实数据接入版） */}
             <div className="w-full max-w-xs rounded-2xl border border-sky-100 bg-white px-4 py-3 text-sm shadow-sm">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Plan: {PLAN_NAME}</span>
-                <span className="text-xs text-sky-700">Preview</span>
+                <span className="font-semibold text-slate-800">
+                  Plan: {loggedIn ? "Free" : "Guest"}
+                </span>
+                <span className="text-xs text-sky-700">Usage today</span>
               </div>
-              <p className="mt-1 text-xs text-slate-500">
-                Today: <span className="font-semibold text-slate-800">{usedToday}</span>
-                {" / "}
-                <span className="font-semibold text-slate-800">{DAILY_LIMIT}</span> AI generations
+              <p className="mt-1 text-xs text-slate-500 md:text-sm">
+                {loggedIn ? (
+                  <>
+                    Today:{" "}
+                    <span className="font-semibold text-slate-800">{usedToday}</span>
+                    {" / "}
+                    <span className="font-semibold text-slate-800">
+                      {dailyLimit}
+                    </span>{" "}
+                    AI generations
+                  </>
+                ) : (
+                  <>Sign in to track your daily AI generations.</>
+                )}
               </p>
               <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
                 <div
@@ -124,7 +165,6 @@ export default function AIGenerateBackgroundPage() {
                 type="button"
                 className="mt-3 w-full rounded-xl border border-sky-500/60 bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100"
                 onClick={() => {
-                  // 先跳到 pricing 页面，后面再接 Stripe
                   window.location.href = "/pricing";
                 }}
               >
@@ -157,10 +197,14 @@ export default function AIGenerateBackgroundPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || reachedLimit}
                   className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {loading ? "Generating..." : "Generate Background"}
+                  {reachedLimit
+                    ? "Daily limit reached"
+                    : loading
+                    ? "Generating..."
+                    : "Generate Background"}
                 </button>
 
                 <p className="text-xs text-slate-500">
