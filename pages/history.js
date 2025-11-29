@@ -21,6 +21,45 @@ function formatDate(iso) {
   }
 }
 
+// 尽量从老数据里“猜”出图片地址
+function extractImageUrl(doc) {
+  if (!doc || typeof doc !== 'object') return '';
+
+  // 最常见字段
+  if (doc.imageUrl) return doc.imageUrl;
+  if (doc.resultUrl) return doc.resultUrl;
+  if (doc.url) return doc.url;
+
+  // 其它可能字段（早期版本可能用过）
+  if (doc.image) return doc.image;
+  if (doc.image_url) return doc.image_url;
+  if (doc.fullUrl) return doc.fullUrl;
+  if (doc.thumbnailUrl) return doc.thumbnailUrl;
+  if (doc.previewUrl) return doc.previewUrl;
+
+  // 嵌套 data / result 结构
+  if (doc.data) {
+    if (doc.data.imageUrl) return doc.data.imageUrl;
+    if (doc.data.url) return doc.data.url;
+  }
+  if (doc.result) {
+    if (doc.result.imageUrl) return doc.result.imageUrl;
+    if (doc.result.url) return doc.result.url;
+  }
+
+  // 数组形式
+  if (Array.isArray(doc.images) && doc.images.length > 0) {
+    if (typeof doc.images[0] === 'string') return doc.images[0];
+    if (doc.images[0] && doc.images[0].url) return doc.images[0].url;
+  }
+  if (Array.isArray(doc.outputs) && doc.outputs.length > 0) {
+    if (typeof doc.outputs[0] === 'string') return doc.outputs[0];
+    if (doc.outputs[0] && doc.outputs[0].url) return doc.outputs[0].url;
+  }
+
+  return '';
+}
+
 export default function HistoryPage({ items }) {
   return (
     <>
@@ -61,7 +100,7 @@ export default function HistoryPage({ items }) {
                       />
                     ) : (
                       <span className="text-xs text-slate-400 px-3 text-center">
-                        暂无缩略图（数据库中没有保存 imageUrl 字段）。
+                        这条记录当时没有把图片地址写进数据库，只能显示文字信息。
                       </span>
                     )}
                   </div>
@@ -94,7 +133,8 @@ export default function HistoryPage({ items }) {
           )}
 
           <p className="text-[11px] text-slate-400 mt-4">
-            提示：当前页面只显示最近 50 条生成记录。以后我们可以增加更多筛选条件（按日期、风格、套餐等），以及一键再次生成的功能。
+            说明：老版本生成的记录，有些当时没有把图片地址字段写进 Generation 表，这部分只能显示文字。
+            从现在开始，所有新生成的背景都会保存 imageUrl 字段并显示缩略图。
           </p>
         </div>
       </div>
@@ -122,17 +162,16 @@ export async function getServerSideProps(context) {
     .limit(50)
     .lean();
 
-  const items = docs.map((doc) => ({
-    id: doc._id.toString(),
-    imageUrl:
-      doc.imageUrl ||
-      doc.resultUrl ||
-      doc.url ||
-      '',
-    prompt: doc.prompt || doc.input || '',
-    createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
-    source: doc.operation || doc.source || 'unknown',
-  }));
+  const items = docs.map((doc) => {
+    const imageUrl = extractImageUrl(doc);
+    return {
+      id: doc._id.toString(),
+      imageUrl,
+      prompt: doc.prompt || doc.input || '',
+      createdAt: doc.createdAt ? doc.createdAt.toISOString() : null,
+      source: doc.operation || doc.source || 'unknown',
+    };
+  });
 
   return {
     props: {
