@@ -1,5 +1,5 @@
 // pages/billing/success.js
-import NavBar from "../components/NavBar";
+import NavBar from "../../components/NavBar";
 
 export default function BillingSuccessPage() {
   return (

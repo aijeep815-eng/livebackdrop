@@ -1,5 +1,5 @@
 // pages/billing/cancel.js
-import NavBar from "../components/NavBar";
+import NavBar from "../../components/NavBar";
 
 export default function BillingCancelPage() {
   return (
