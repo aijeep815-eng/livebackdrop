@@ -1,0 +1,1 @@
+export default function Success(){return <div className='p-10 text-center text-green-600 text-2xl'>支付成功！感谢升级！</div>; }

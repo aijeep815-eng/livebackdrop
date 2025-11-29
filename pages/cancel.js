@@ -1,0 +1,1 @@
+export default function Cancel(){return <div className='p-10 text-center text-red-600 text-2xl'>支付取消。</div>; }
