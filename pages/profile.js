@@ -1,4 +1,5 @@
 // pages/profile.js
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 
@@ -12,6 +13,41 @@ function getInitials(nameOrEmail) {
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
+  const [stats, setStats] = useState({
+    generationCount: null,
+    uploadCount: null,
+    currentRights: '',
+  });
+  const [statsError, setStatsError] = useState('');
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchStats();
+    }
+  }, [status]);
+
+  async function fetchStats() {
+    try {
+      setStatsError('');
+      const res = await fetch('/api/stats');
+      if (!res.ok) {
+        throw new Error('Failed to load stats');
+      }
+      const data = await res.json();
+      setStats({
+        generationCount:
+          typeof data.generationCount === 'number'
+            ? data.generationCount
+            : null,
+        uploadCount:
+          typeof data.uploadCount === 'number' ? data.uploadCount : null,
+        currentRights: data.currentRights || '',
+      });
+    } catch (err) {
+      console.error('Fetch stats error:', err);
+      setStatsError('使用统计加载失败，稍后再试。');
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -50,6 +86,16 @@ export default function ProfilePage() {
     user.subscriptionStatus ||
     user.status ||
     '正常';
+
+  const generationCountText =
+    stats.generationCount == null ? '—' : stats.generationCount;
+  const uploadCountText =
+    stats.uploadCount == null ? '—' : stats.uploadCount;
+  const rightsText =
+    stats.currentRights ||
+    (planName.startsWith('Free')
+      ? '免费用户：每天可生成有限数量背景'
+      : '付费用户：可享受更高的生成次数和优先队列');
 
   return (
     <>
@@ -97,28 +143,44 @@ export default function ProfilePage() {
             </p>
           </div>
 
-          {/* 使用情况概要（占位，后续可接真实数据） */}
+          {/* 使用情况概要 */}
           <div className="bg-white rounded-2xl shadow p-6 mb-6">
             <p className="text-sm uppercase tracking-wide text-slate-400 mb-3">
-              使用概况（预留区）
+              使用概况
             </p>
+
+            {statsError && (
+              <p className="text-xs text-red-600 mb-2">{statsError}</p>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-semibold text-slate-900">—</p>
-                <p className="text-xs text-slate-500 mt-1">已生成背景数</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {generationCountText}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  已生成背景数
+                </p>
               </div>
               <div>
-                <p className="text-2xl font-semibold text-slate-900">—</p>
-                <p className="text-xs text-slate-500 mt-1">已上传素材数</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {uploadCountText}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  已上传素材数
+                </p>
               </div>
               <div>
-                <p className="text-2xl font-semibold text-slate-900">—</p>
-                <p className="text-xs text-slate-500 mt-1">当前权益</p>
+                <p className="text-sm text-slate-700 leading-snug">
+                  {rightsText}
+                </p>
+                <p className="text-xs text-slate-400 mt-1">当前权益</p>
               </div>
             </div>
+
             <p className="text-xs text-slate-500 mt-4">
-              这里以后可以接入你的 AI 生成记录、上传素材数量等统计信息，用于展示你在
-              LiveBackdrop 的使用情况。
+              使用统计来自你的真实历史数据：AI 生成记录与素材上传记录。以后我们可以增加更多维度
+              （按日期统计、本月使用情况等），用于帮助你规划套餐与使用频率。
             </p>
           </div>
         </div>
