@@ -1,6 +1,7 @@
-// Unified AI background generation endpoint
+// Unified AI background generation endpoint (DALL·E 2 version)
 // This file is safe to use for BOTH /api/generate and /api/ai/generate.
-// It always uses a valid OpenAI image size (1536x1024).
+// Uses model `dall-e-2`, which usually不需要组织验证（相比 gpt-image-1 更宽松）。
+// 返回结构：{ imageUrl }
 
 import OpenAI from 'openai';
 
@@ -13,13 +14,13 @@ function buildPrompt(prompt, style) {
 
   const styleMap = {
     realistic:
-      'highly detailed, photorealistic, 4k resolution, natural lighting',
+      'highly detailed, photorealistic, natural lighting, 4k resolution',
     studio:
-      'professional photography studio lighting, clean background, soft box light, depth of field',
+      'professional studio lighting, clean background, soft box light, shallow depth of field',
     cartoon:
-      'cartoon illustration, clean lines, bright colors, soft shading, vector style',
+      'cartoon illustration, vector style, clean lines, bright colors, soft shading',
     minimal:
-      'minimalist design, clean composition, few objects, soft neutral colors, lots of negative space',
+      'minimalist style, clean composition, few elements, neutral colors, lots of negative space',
   };
 
   const styleText = styleMap[style] || '';
@@ -54,9 +55,9 @@ export default async function handler(req, res) {
 
   try {
     const result = await openai.images.generate({
-      model: 'gpt-image-1',
+      model: 'dall-e-2',
       prompt: finalPrompt,
-      size: '1536x1024', // ✅ valid size
+      size: '1024x1024', // ✅ DALL·E 2 支持的尺寸
       n: 1,
     });
 
@@ -71,7 +72,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       imageUrl: image.url,
-      model: result.model || 'gpt-image-1',
+      model: result.model || 'dall-e-2',
       created: result.created,
     });
   } catch (err) {
