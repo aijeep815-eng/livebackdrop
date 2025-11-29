@@ -1,187 +1,254 @@
-// pages/profile.js
-// 用户中心：展示基本信息、当前订阅、使用概况
-// 文案中写清楚 Free 每日上限：生成 5 张、上传 10 张。
-
-import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
 import Head from 'next/head';
+import { getSession, useSession } from 'next-auth/react';
+import dbConnect from '../lib/dbConnect';
+import Generation from '../models/Generation';
+import Upload from '../models/Upload';
 
-export default function ProfilePage() {
-  const { data: session, status } = useSession();
-  const [stats, setStats] = useState({
-    totalGenerations: 0,
-    totalUploads: 0,
-  });
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [statsError, setStatsError] = useState('');
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      loadStats();
-    }
-  }, [status]);
-
-  async function loadStats() {
-    try {
-      setLoadingStats(true);
-      setStatsError('');
-      const res = await fetch('/api/stats');
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to load stats');
-      }
-      setStats({
-        totalGenerations: data.totalGenerations || 0,
-        totalUploads: data.totalUploads || 0,
-      });
-    } catch (err) {
-      console.error('load stats error', err);
-      setStatsError(err.message || '加载使用统计失败。');
-    } finally {
-      setLoadingStats(false);
-    }
-  }
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-600 text-sm">加载中...</p>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-white shadow rounded-2xl px-8 py-6 max-w-md text-center">
-          <h1 className="text-2xl font-semibold mb-4">请先登录</h1>
-          <p className="text-slate-600 mb-4">
-            查看用户中心需要登录账户。请先登录或注册，然后再访问本页面。
-          </p>
-          <a
-            href="/auth/signin"
-            className="inline-block px-4 py-2 rounded-xl bg-blue-600 text-white font-medium hover:bg-blue-700 transition"
-          >
-            去登录
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  const user = session.user || {};
-  const planName =
+// 和后端保持一致的套餐识别逻辑
+function getPlanKey(user = {}) {
+  const raw =
     user.subscriptionPlan ||
     user.planName ||
     user.plan ||
-    'Free / 未开通订阅';
+    user.stripePlan ||
+    '';
+  const lower = raw.toString().toLowerCase();
 
-  const planStatusText = '正常';
+  if (
+    lower.includes('creator') ||
+    lower.includes('pro') ||
+    lower.includes('unlimited')
+  ) {
+    return 'pro';
+  }
+
+  return 'free';
+}
+
+function getPlanInfo(planKey) {
+  if (planKey === 'pro') {
+    return {
+      label: 'CreatorUnlimited',
+      badge: '专业创作者套餐',
+      description:
+        '无限生成 AI 背景、无限素材上传、图像实验室不限次数，适合直播、视频创作者长期使用。',
+      limits: '生成 / 上传 / 实验室均不再限制次数。',
+      highlight: '你已经是付费用户，可以放心大量使用，不用担心今日次数用完。',
+    };
+  }
+
+  return {
+    label: 'Free',
+    badge: '免费体验套餐',
+    description:
+      '适合体验和轻度使用，每天有一定免费额度，足够测试效果和偶尔使用。',
+    limits:
+      '每天最多 3 张 AI 背景、10 张素材上传、图像实验室 1 次。',
+    highlight:
+      '如果你发现每天额度不够用，可以在下方升级到 CreatorUnlimited，解锁不限量。',
+  };
+}
+
+export default function ProfilePage({ statsFromServer, initialPlanKey }) {
+  // 为了保持和全站一致，这里还是用 useSession 读取最新用户信息
+  const { data: session } = useSession();
+  const planKey = getPlanKey(session?.user || {}) || initialPlanKey || 'free';
+  const planInfo = getPlanInfo(planKey);
+
+  const stats = statsFromServer || {
+    totalGenerations: 0,
+    todayGenerations: 0,
+    totalUploads: 0,
+    todayUploads: 0,
+  };
 
   return (
     <>
       <Head>
-        <title>用户中心 – LiveBackdrop</title>
+        <title>用户中心 - LiveBackdrop</title>
       </Head>
       <div className="min-h-screen bg-slate-50 py-10 px-4">
         <div className="max-w-5xl mx-auto space-y-6">
-          {/* 基本信息 */}
-          <section className="bg-white rounded-2xl shadow p-6 flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center text-lg font-semibold">
-              {user.name
-                ? user.name[0]?.toUpperCase()
-                : user.email?.[0]?.toUpperCase() || 'U'}
-            </div>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            用户中心
+          </h1>
+          <p className="text-slate-600 text-sm">
+            在这里查看你的当前套餐、使用统计，以及升级路径。
+          </p>
+
+          {/* 套餐信息卡片 */}
+          <div className="bg-white rounded-2xl shadow border border-slate-200 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <p className="text-sm text-slate-500 mb-1">基本信息</p>
-              <p className="text-lg font-semibold text-slate-900">
-                {user.name || '未设置昵称'}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-slate-500">
+                  当前套餐
+                </span>
+                <span className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                  {planInfo.label}
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  {planInfo.badge}
+                </span>
+              </div>
+              <p className="mt-3 text-sm text-slate-700">
+                {planInfo.description}
               </p>
-              <p className="text-sm text-slate-600">{user.email}</p>
+              <p className="mt-2 text-xs text-slate-500">
+                当前规则：{planInfo.limits}
+              </p>
+              <p className="mt-2 text-xs text-emerald-600">
+                {planInfo.highlight}
+              </p>
             </div>
-          </section>
 
-          {/* 当前订阅 */}
-          <section className="bg-white rounded-2xl shadow p-6">
-            <p className="text-sm text-slate-500 mb-2">当前订阅</p>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-              <p className="text-lg font-semibold text-slate-900">
-                {planName}
-              </p>
-              <p className="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                状态：{planStatusText}
-              </p>
+            <div className="flex flex-col items-stretch gap-2 min-w-[180px]">
+              {planKey === 'free' ? (
+                <>
+                  <a
+                    href="/pricing"
+                    className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  >
+                    升级到 CreatorUnlimited
+                  </a>
+                  <span className="text-[11px] text-slate-500 text-center">
+                    升级后即可无限生成背景、无限上传素材、图像实验室不限次数。
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center justify-center rounded-xl bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                    已是付费用户
+                  </div>
+                  <span className="text-[11px] text-slate-500 text-center">
+                    如需调整套餐，请前往 Stripe 订阅中心或联系站长。
+                  </span>
+                </>
+              )}
             </div>
-            <p className="text-xs text-slate-500">
-              若你刚刚升级了套餐，可以尝试刷新页面。如果套餐信息与右上角显示不一致，以后我们会在这里同步显示 Stripe 的详细数据（到期时间、续费方式等）。
-            </p>
-          </section>
+          </div>
 
-          {/* 使用概况 */}
-          <section className="bg-white rounded-2xl shadow p-6">
-            <p className="text-sm text-slate-500 mb-3">使用概况（预留区）</p>
-
-            {statsError && (
-              <p className="text-xs text-red-600 mb-2">{statsError}</p>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* 已生成背景数 → /history */}
-              <a
-                href="/history"
-                className="group border border-slate-200 rounded-2xl px-4 py-3 hover:border-blue-500 hover:bg-blue-50/40 transition flex flex-col justify-between"
-              >
-                <div>
-                  <p className="text-2xl font-semibold text-slate-900 group-hover:text-blue-700">
-                    {loadingStats ? '—' : stats.totalGenerations}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    已生成背景数
-                  </p>
-                </div>
-                <p className="mt-2 text-[11px] text-slate-400 group-hover:text-blue-600">
-                  点击查看 AI 生成历史记录。
+          {/* 使用统计卡片 */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl shadow border border-slate-200 p-6">
+              <h2 className="text-sm font-semibold text-slate-800 mb-3">
+                AI 背景使用情况
+              </h2>
+              <div className="space-y-2 text-sm text-slate-700">
+                <p>
+                  今日已生成：
+                  <span className="font-semibold text-slate-900">
+                    {stats.todayGenerations}
+                  </span>{' '}
+                  张
                 </p>
-              </a>
-
-              {/* 已上传素材数 → /uploads */}
-              <a
-                href="/uploads"
-                className="group border border-slate-200 rounded-2xl px-4 py-3 hover:border-blue-500 hover:bg-blue-50/40 transition flex flex-col justify-between"
-              >
-                <div>
-                  <p className="text-2xl font-semibold text-slate-900 group-hover:text-blue-700">
-                    {loadingStats ? '—' : stats.totalUploads}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    已上传素材数
-                  </p>
-                </div>
-                <p className="mt-2 text-[11px] text-slate-400 group-hover:text-blue-600">
-                  点击进入素材管理页面。
-                </p>
-              </a>
-
-              {/* 当前权益说明 */}
-              <div className="border border-slate-200 rounded-2xl px-4 py-3 flex flex-col justify-between">
-                <div>
-                  <p className="text-xs text-slate-500 mb-1">当前权益</p>
-                  <p className="text-sm font-medium text-slate-800">
-                    免费用户：每天最多生成 5 张虚拟背景，
-                    最多上传 10 张素材。
-                  </p>
-                </div>
-                <p className="mt-2 text-[11px] text-slate-400">
-                  使用统计来自你的真实历史数据：AI 生成记录与素材上传记录。
-                  以后我们可以增加更多维度（按日期统计、本月使用情况等），
-                  用于帮助你规划套餐与使用策略。升级 CreatorUnlimited 后，我们可以取消次数限制。
+                <p>
+                  累计生成总数：
+                  <span className="font-semibold text-slate-900">
+                    {stats.totalGenerations}
+                  </span>{' '}
+                  张
                 </p>
               </div>
+              <div className="mt-4 flex gap-2 text-xs text-slate-500">
+                <a href="/generate" className="underline">
+                  去生成新的背景
+                </a>
+                <span>·</span>
+                <a href="/history" className="underline">
+                  查看生成历史
+                </a>
+              </div>
             </div>
-          </section>
+
+            <div className="bg-white rounded-2xl shadow border border-slate-200 p-6">
+              <h2 className="text-sm font-semibold text-slate-800 mb-3">
+                素材上传 & 图像实验室
+              </h2>
+              <div className="space-y-2 text-sm text-slate-700">
+                <p>
+                  今日已上传：
+                  <span className="font-semibold text-slate-900">
+                    {stats.todayUploads}
+                  </span>{' '}
+                  张
+                </p>
+                <p>
+                  累计上传总数：
+                  <span className="font-semibold text-slate-900">
+                    {stats.totalUploads}
+                  </span>{' '}
+                  张
+                </p>
+              </div>
+              <div className="mt-4 flex gap-2 text-xs text-slate-500">
+                <a href="/uploads" className="underline">
+                  管理我的素材
+                </a>
+                <span>·</span>
+                <a href="/lab" className="underline">
+                  打开图像实验室
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-slate-400 mt-4">
+            使用统计基于服务器实时数据（Generation / Upload 表），如果你刚刚生成或上传，
+            刷新页面即可看到最新数字。
+          </p>
         </div>
       </div>
     </>
   );
+}
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context);
+
+  if (!session || !session.user || !session.user.id) {
+    return {
+      redirect: {
+        destination: '/auth/signin',
+        permanent: false,
+      },
+    };
+  }
+
+  await dbConnect();
+  const userId = session.user.id;
+
+  const now = new Date();
+  const startOfDay = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  const [totalGenerations, todayGenerations, totalUploads, todayUploads] =
+    await Promise.all([
+      Generation.countDocuments({ user: userId }),
+      Generation.countDocuments({
+        user: userId,
+        createdAt: { $gte: startOfDay },
+      }),
+      Upload.countDocuments({ user: userId }),
+      Upload.countDocuments({
+        user: userId,
+        createdAt: { $gte: startOfDay },
+      }),
+    ]);
+
+  const initialPlanKey = getPlanKey(session.user);
+
+  return {
+    props: {
+      statsFromServer: {
+        totalGenerations: Number(totalGenerations) || 0,
+        todayGenerations: Number(todayGenerations) || 0,
+        totalUploads: Number(totalUploads) || 0,
+        todayUploads: Number(todayUploads) || 0,
+      },
+      initialPlanKey,
+    },
+  };
 }
