@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 
 const links = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/subscriptions", label: "Subscriptions" },
   { href: "/admin/backgrounds", label: "Backgrounds" },
