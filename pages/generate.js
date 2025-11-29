@@ -1,11 +1,62 @@
 // pages/generate.js
 // 主生成页面：带提示词模板 + 自动写入生成历史记录
-// 如果你的生成接口路径不是 `/api/generate`，请修改下面这个常量：
-const GENERATE_API_PATH = '/api/generate';
+// 这里不再写死一个接口路径，而是尝试多个候选路径，
+// 以兼容你项目之前已经在用的生成接口。
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import Head from 'next/head';
+
+const CANDIDATE_ENDPOINTS = [
+  '/api/generate',
+  '/api/generate-background',
+  '/api/background/generate',
+  '/api/ai/generate',
+];
+
+async function callGenerateAPI(payload) {
+  let lastError = null;
+
+  for (const endpoint of CANDIDATE_ENDPOINTS) {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        // 404 继续尝试下一个，其他错误直接抛出
+        if (res.status === 404) {
+          lastError =
+            data.error ||
+            `接口 ${endpoint} 返回 404（未找到），尝试下一个候选路径。`;
+          continue;
+        }
+        throw new Error(data.error || `接口 ${endpoint} 调用失败`);
+      }
+
+      if (!data.imageUrl) {
+        // 如果没有返回 imageUrl，当作失败
+        throw new Error(
+          data.error ||
+            `接口 ${endpoint} 没有返回 imageUrl 字段，无法显示图片。`
+        );
+      }
+
+      return { data, endpointUsed: endpoint };
+    } catch (err) {
+      lastError = err.message || String(err);
+    }
+  }
+
+  throw new Error(
+    lastError ||
+      '所有候选生成接口都调用失败，请检查后端接口路径是否变更。'
+  );
+}
 
 export default function GeneratePage() {
   const { data: session, status } = useSession();
@@ -132,25 +183,12 @@ export default function GeneratePage() {
     setImageUrl('');
 
     try {
-      // 调用原有生成接口
-      const res = await fetch(GENERATE_API_PATH, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: prompt.trim(),
-          style: style || undefined,
-        }),
-      });
+      const payload = {
+        prompt: prompt.trim(),
+        style: style || undefined,
+      };
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || '生成失败，请稍后再试。');
-      }
-
-      if (!data.imageUrl) {
-        throw new Error('生成接口没有返回 imageUrl。');
-      }
+      const { data, endpointUsed } = await callGenerateAPI(payload);
 
       setImageUrl(data.imageUrl);
 
@@ -177,6 +215,7 @@ export default function GeneratePage() {
             creditsCost: 1,
             meta: {
               source: 'generate-main',
+              endpointUsed,
             },
           }),
         });
