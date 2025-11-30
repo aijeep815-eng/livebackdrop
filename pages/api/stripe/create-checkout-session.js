@@ -1,71 +1,55 @@
 // pages/api/stripe/create-checkout-session.js
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+
+import Stripe from 'stripe';
+
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+
+// 这里用的是订阅价格 ID（从 Stripe Dashboard 复制过来）
+// 例如 price_1234567890abcdef
+const creatorPriceId = process.env.STRIPE_CREATOR_PRICE_ID;
+
+// 用 NEXTAUTH_URL 作为站点根地址（你之前已经配置过）
+const appBaseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  const priceId = process.env.STRIPE_PRICE_ID_CREATOR;
-  const baseUrl = process.env.NEXTAUTH_URL;
-
-  if (!stripeSecretKey || !priceId || !baseUrl) {
-    return res.status(500).json({
-      error:
-        "Stripe environment variables are missing. Please set STRIPE_SECRET_KEY, STRIPE_PRICE_ID_CREATOR and NEXTAUTH_URL.",
-    });
+  if (!stripeSecretKey) {
+    return res.status(500).json({ error: 'Missing STRIPE_SECRET_KEY env' });
+  }
+  if (!creatorPriceId) {
+    return res.status(500).json({ error: 'Missing STRIPE_CREATOR_PRICE_ID env' });
   }
 
-  const session = await getServerSession(req, res, authOptions);
-
-  if (!session || !session.user || !session.user.email) {
-    return res.status(401).json({
-      error: "You must be logged in to upgrade your plan.",
-    });
-  }
+  const stripe = new Stripe(stripeSecretKey, {
+    apiVersion: '2024-06-20',
+  });
 
   try {
-    const params = new URLSearchParams();
-    params.append("mode", "subscription");
-    params.append("payment_method_types[0]", "card");
-    params.append("line_items[0][price]", priceId);
-    params.append("line_items[0][quantity]", "1");
-    params.append(
-      "success_url",
-      `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`
-    );
-    params.append(
-      "cancel_url",
-      `${baseUrl}/billing/cancel`
-    );
-    params.append("customer_email", session.user.email);
-
-    const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${stripeSecretKey}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: params.toString(),
+    // 如果你想根据 req.body.plan 支持多个套餐，可以在这里做判断
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: creatorPriceId,
+          quantity: 1,
+        },
+      ],
+      // 支付成功 / 取消后的跳转页面
+      success_url: `${appBaseUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appBaseUrl}/cancel`,
     });
 
-    const data = await stripeRes.json();
-
-    if (!stripeRes.ok) {
-      console.error("Stripe error:", data);
-      return res.status(500).json({
-        error: data.error?.message || "Failed to create Stripe Checkout session.",
-      });
-    }
-
-    return res.status(200).json({ url: data.url });
-  } catch (error) {
-    console.error("Error creating Stripe Checkout session:", error);
+    return res.status(200).json({ url: session.url });
+  } catch (err) {
+    console.error('Stripe checkout error:', err);
     return res.status(500).json({
-      error: error.message || "Failed to create Stripe Checkout session.",
+      error: 'Unable to create checkout session',
+      message: err.message,
     });
   }
 }
