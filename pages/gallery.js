@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
-const TOTAL_IMAGES = 46; // 现在是 46 张图：带货 + 普通 + 户外 + 科技未来 + 电商直播间
+const TOTAL_IMAGES = 46;
 
 // 根据编号分配分类
 function getCategory(id) {
@@ -29,8 +29,8 @@ const images = Array.from({ length: TOTAL_IMAGES }, (_, index) => {
 
   return {
     id,
-    // 如果你是 .png，把 .jpg 改成 .png 即可
-    src: `/gallery/gallery_${padded}.jpg`,
+    // 注意：这里已经改成 .png，图片放在 public/gallery/
+    src: `/gallery/gallery_${padded}.png`,
     alt: `直播背景图 ${padded}`,
     category: getCategory(id),
   };
@@ -180,7 +180,7 @@ export default function GalleryPage() {
         .gallery-thumb {
           position: relative;
           width: 100%;
-          padding-bottom: 56.25%; /* 16:9 缩略图比例 */
+          padding-bottom: 56.25%;
           border-radius: 12px;
           overflow: hidden;
           background: #e5e7eb;
