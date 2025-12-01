@@ -1,149 +1,117 @@
 // pages/admin/subscriptions.js
-import { useEffect, useState } from "react";
-import NavBar from "../../components/NavBar";
+import Head from 'next/head';
+import { getSession } from 'next-auth/react';
+import dbConnect from '../../lib/dbConnect';
 
-export default function AdminSubscriptionsPage() {
-  const [loading, setLoading] = useState(true);
-  const [subs, setSubs] = useState([]);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const res = await fetch("/api/admin/subscriptions");
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load subscriptions");
-        }
-        setSubs(Array.isArray(data.subscriptions) ? data.subscriptions : []);
-      } catch (e) {
-        console.error(e);
-        setError(e.message || "Failed to load subscriptions");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
+/**
+ * 后台统一布局（与 /admin/costs 完全一致）
+ */
+function AdminLayout({ active, children }) {
+  const navItems = [
+    { key: 'dashboard', label: 'Dashboard', href: '/admin' },
+    { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
+    { key: 'users', label: 'Users', href: '/admin/users' },
+    { key: 'subscriptions', label: 'Subscriptions', href: '/admin/subscriptions' },
+    { key: 'backgrounds', label: 'Backgrounds', href: '/admin/backgrounds' },
+    { key: 'uploads', label: 'Uploads', href: '/admin/uploads' },
+    { key: 'feedback', label: 'Feedback', href: '/admin/feedback' },
+    { key: 'logs', label: 'Logs', href: '/admin/logs' },
+    { key: 'membership', label: 'Membership', href: '/admin/membership' },
+    { key: 'payments', label: 'Payments', href: '/admin/payments' },
+    { key: 'costs', label: 'Costs', href: '/admin/costs' },
+    { key: 'settings', label: 'Settings', href: '/admin/settings' },
+  ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <NavBar />
-      <main className="flex-1">
-        <section className="mx-auto max-w-6xl px-4 py-8 md:py-10">
-          <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
-                Subscriptions
-              </h1>
-              <p className="mt-1 text-sm text-slate-600">
-                View active and past subscriptions for LiveBackdrop users. This is a
-                simple internal view for you to confirm who has paid and what their
-                current status is.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-sky-100 bg-sky-50 px-4 py-2 text-xs text-sky-800">
-              <p className="font-semibold">Note</p>
-              <p>
-                Data comes from Stripe webhooks and may be slightly delayed compared to
-                real-time Stripe dashboard.
-              </p>
-            </div>
-          </div>
-
-          {error && (
-            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          {loading ? (
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-sky-500" />
-              <span>Loading subscriptions…</span>
-            </div>
-          ) : subs.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              No subscription records found yet. Once users complete checkout via Stripe,
-              they will appear here.
+    <div className="min-h-screen bg-slate-50">
+      <div className="flex min-h-screen">
+        <aside className="w-56 bg-white border-r border-slate-200 px-4 py-6">
+          <div className="mb-6">
+            <p className="text-[11px] font-semibold text-slate-400 tracking-wide uppercase">
+              Admin
             </p>
-          ) : (
-            <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <table className="min-w-full text-left text-xs text-slate-700 md:text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500 md:text-xs">
-                  <tr>
-                    <th className="px-3 py-2">Email</th>
-                    <th className="px-3 py-2">Plan</th>
-                    <th className="px-3 py-2">Status</th>
-                    <th className="px-3 py-2">Stripe Customer</th>
-                    <th className="px-3 py-2">Stripe Subscription</th>
-                    <th className="px-3 py-2">Created</th>
-                    <th className="px-3 py-2">Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subs.map((s) => {
-                    const created = s.createdAt
-                      ? new Date(s.createdAt).toLocaleString()
-                      : "-";
-                    const updated = s.updatedAt
-                      ? new Date(s.updatedAt).toLocaleString()
-                      : "-";
-                    return (
-                      <tr
-                        key={s._id}
-                        className="border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60"
-                      >
-                        <td className="px-3 py-2 align-top">
-                          <div className="max-w-[200px] truncate font-medium">
-                            {s.email || "-"}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <span className="inline-flex rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-700">
-                            {s.plan || "creator"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <span
-                            className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                              s.status === "active"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : s.status === "canceled"
-                                ? "bg-slate-100 text-slate-600"
-                                : "bg-amber-50 text-amber-700"
-                            }`}
-                          >
-                            {s.status || "-"}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <div className="max-w-[180px] truncate text-[11px] font-mono text-slate-500">
-                            {s.stripeCustomerId || "-"}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-top">
-                          <div className="max-w-[220px] truncate text-[11px] font-mono text-slate-500">
-                            {s.stripeSubscriptionId || "-"}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 align-top text-[11px] text-slate-500">
-                          {created}
-                        </td>
-                        <td className="px-3 py-2 align-top text-[11px] text-slate-500">
-                          {updated}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </main>
+          </div>
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = item.key === active;
+              return (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  className={[
+                    'block rounded-xl px-3 py-2 text-sm',
+                    isActive
+                      ? 'bg-sky-100 text-sky-700 font-semibold'
+                      : 'text-slate-700 hover:bg-slate-100',
+                  ].join(' ')}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+          </nav>
+        </aside>
+
+        <main className="flex-1 px-6 py-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
+}
+
+/**
+ * 后台订阅管理页面（你以后可以在这里显示所有 Stripe Subscriptions）
+ */
+export default function AdminSubscriptionsPage() {
+  return (
+    <>
+      <Head>
+        <title>Subscriptions - Admin - LiveBackdrop</title>
+      </Head>
+
+      <AdminLayout active="subscriptions">
+        <div className="max-w-5xl mx-auto space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">订阅管理</h1>
+            <p className="text-sm text-slate-600 mt-1">
+              在这里查看用户订阅、自动续费状态、到期日期等信息。（当前为占位 UI）
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 text-slate-700">
+            <p>这个页面已经接入统一后台布局。你可以在这里扩展：</p>
+            <ul className="list-disc ml-6 mt-3 text-sm">
+              <li>显示所有用户的当前套餐</li>
+              <li>显示 Stripe Subscription ID</li>
+              <li>显示订阅是否有效、到期时间</li>
+              <li>接入 Stripe Webhook 后自动同步</li>
+            </ul>
+            <p className="mt-4 text-sm text-slate-500">
+              （目前只是基础结构，后续你要我扩展我可以继续加功能。）
+            </p>
+          </div>
+        </div>
+      </AdminLayout>
+    </>
+  );
+}
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context);
+
+  if (!session || !session.user) {
+    return {
+      redirect: {
+        destination: '/auth/signin',
+        permanent: false,
+      },
+    };
+  }
+
+  await dbConnect();
+
+  return {
+    props: {},
+  };
 }
