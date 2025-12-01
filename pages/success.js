@@ -1,81 +1,111 @@
-// pages/success.js
-
 import Head from 'next/head';
-import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
 export default function SuccessPage() {
   const { data: session } = useSession();
-  const userEmail = session?.user?.email || 'LiveBackdrop 用户';
-  const currentPlan = session?.user?.plan || 'Creator Unlimited';
+  const userName =
+    session?.user?.name ||
+    (session?.user?.email ? session.user.email.split('@')[0] : '创作者');
 
   return (
     <>
       <Head>
-        <title>Upgrade Successful | LiveBackdrop</title>
-        <meta
-          name="description"
-          content="Your LiveBackdrop plan has been upgraded successfully."
-        />
+        <title>升级成功 - LiveBackdrop</title>
       </Head>
-
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-              <span className="text-2xl">✅</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">
-                升级成功！
-              </h1>
-              <p className="text-sm text-slate-500">
-                感谢你的支持，你的 LiveBackdrop 套餐已经升级完成。
+      <div className="min-h-screen bg-slate-50 py-12 px-4">
+        <div className="max-w-3xl mx-auto space-y-8">
+          {/* 顶部成功提示条 */}
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 flex items-start gap-3">
+            <div className="mt-0.5 text-emerald-500">✔</div>
+            <div className="text-sm text-emerald-800 space-y-1">
+              <p className="font-semibold">
+                你已成功升级为 CreatorUnlimited！
+              </p>
+              <p className="text-xs text-emerald-700">
+                从现在起，你可以无限生成 AI 虚拟背景、无限上传素材，并且图像实验室不限次数。
               </p>
             </div>
           </div>
 
-          <div className="mt-6 space-y-3 text-sm text-slate-700">
-            <p>
-              账号邮箱：{' '}
-              <span className="font-semibold text-slate-900">
-                {userEmail}
-              </span>
-            </p>
-            <p>
-              当前套餐：{' '}
-              <span className="font-semibold text-slate-900">
-                {currentPlan}
-              </span>
-            </p>
-            <p className="text-slate-500 text-xs">
-              如果页面显示的套餐名称暂时没有更新，你可以稍后刷新页面或重新登录账号。
-            </p>
+          {/* 主欢迎卡片 */}
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-8 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
+                <span role="img" aria-label="party">
+                  🎉
+                </span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900">
+                  升级成功，{userName}！
+                </h1>
+                <p className="text-sm text-slate-600 mt-1">
+                  你的账号已经解锁全部高级功能，现在可以把 LiveBackdrop 当成你的「专属背景工厂」来用。
+                </p>
+              </div>
+            </div>
+
+            {/* 功能说明 */}
+            <div className="grid sm:grid-cols-2 gap-4 text-sm text-slate-700">
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+                <p className="font-semibold text-slate-900">
+                  你现在可以：
+                </p>
+                <ul className="text-xs text-slate-600 space-y-1">
+                  <li>· 无限生成高质量 AI 虚拟背景</li>
+                  <li>· 无限上传你的素材并长期保存</li>
+                  <li>· 图像实验室不限次数，随便玩</li>
+                  <li>· 无需再担心「今日次数已用完」</li>
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
+                <p className="font-semibold text-slate-900">
+                  接下来建议你：
+                </p>
+                <ul className="text-xs text-slate-600 space-y-1">
+                  <li>1. 先生成一批适合你直播/录课的主背景</li>
+                  <li>2. 把你现有的房间照片上传到「我的素材」</li>
+                  <li>3. 用图像实验室美化/扩展/换背景</li>
+                  <li>4. 把满意的背景保存到直播/会议软件里使用</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* 行动按钮区域 */}
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500">
+                从哪一步开始？下面三个入口都是为你准备的：
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a
+                  href="/generate"
+                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-700"
+                >
+                  立即生成新的 AI 背景
+                </a>
+                <a
+                  href="/lab"
+                  className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  打开图像实验室玩一玩
+                </a>
+                <a
+                  href="/profile"
+                  className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  查看我的套餐和使用统计
+                </a>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-8 grid gap-3 md:grid-cols-2">
-            <Link
-              href="/generate"
-              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-            >
-              去生成 AI 背景
-            </Link>
-
-            <Link
-              href="/profile"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              查看我的账号
-            </Link>
-          </div>
-
-          <div className="mt-6 text-xs text-slate-500 space-y-2">
+          {/* 底部说明 */}
+          <div className="text-[11px] text-slate-500 space-y-1">
             <p>
-              · 如果你需要开具账单或管理订阅（取消 / 修改支付方式），可以在账号页面中进入订阅管理，或通过
-              Stripe 收据邮件中的链接进行操作。
+              你的订阅会按月自动续费，你可以在「用户中心 / Profile」中随时查看当前套餐，并在 Stripe 订阅中心取消或调整价格。
             </p>
             <p>
-              · 如发现额度没有正常生效，可以先刷新页面、重新登录。如果问题仍然存在，请联系站长处理。
+              所有生成的背景都会自动保存到「生成历史 / History」页面，你可以随时重新下载。
             </p>
           </div>
         </div>
