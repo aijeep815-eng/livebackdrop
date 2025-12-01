@@ -47,21 +47,19 @@ export default async function handler(req, res) {
   try {
     await dbConnect();
 
-    // 这里假设你的限额逻辑已经在别的地方实现了（例如中间件或单独的函数），
-    // 如果之前有「每天 3 张」检查，可以在这里再接回去调用。
-    // 为了避免和你现有逻辑冲突，这里暂时只做最基础的生成 + 写表。
-
     const imageSize = size && typeof size === 'string' ? size : 'auto';
 
     const result = await client.images.generate({
       model: 'gpt-image-1',
       prompt: finalPrompt,
-      size: imageSize, // 建议前端传 'auto' 或合法值
+      size: imageSize,
     });
 
+    const first = result?.data?.[0] || null;
+
     const imageUrl =
-      result?.data?.[0]?.url ||
-      result?.data?.[0]?.image_url ||
+      first?.url ||
+      first?.image_url ||
       null;
 
     if (!imageUrl) {
@@ -70,12 +68,13 @@ export default async function handler(req, res) {
         .json({ error: 'AI 返回结果中没有图片地址。' });
     }
 
-    // ✅ 关键：把 imageUrl 写入 Generation 表
+    // ✅ 写入 Generation 表：这次 schema 已经有 imageUrl 字段
     const generationDoc = await Generation.create({
       user: userId,
       prompt: finalPrompt,
       imageUrl,
-      operation: null, // 普通生成
+      result: first,
+      operation: 'generate',
     });
 
     return res.status(200).json({
