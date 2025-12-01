@@ -19,6 +19,10 @@ export default function Footer() {
         { name: 'Generate Background', href: '/generate' },
         { name: 'Upload & Edit', href: '/upload' },
         { name: 'Contact', href: '/contact' },
+
+        // --- Added legal links ---
+        { name: 'Terms', href: '/terms' },
+        { name: 'Privacy', href: '/privacy' },
       ],
     },
     zh: {
@@ -30,6 +34,10 @@ export default function Footer() {
         { name: '生成背景', href: '/generate' },
         { name: '上传与编辑', href: '/upload' },
         { name: '联系我们', href: '/contact' },
+
+        // --- Added legal links ---
+        { name: '服务条款', href: '/terms' },
+        { name: '隐私政策', href: '/privacy' },
       ],
     },
     es: {
@@ -41,6 +49,10 @@ export default function Footer() {
         { name: 'Generar Fondo', href: '/generate' },
         { name: 'Subir y Editar', href: '/upload' },
         { name: 'Contacto', href: '/contact' },
+
+        // --- Added legal links ---
+        { name: 'Términos', href: '/terms' },
+        { name: 'Privacidad', href: '/privacy' },
       ],
     },
   };
