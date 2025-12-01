@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import NavBar from '../components/NavBar';
-import Footer from '../components/Footer';
 
 const TOTAL_IMAGES = 46;
 
@@ -92,14 +91,10 @@ export default function GalleryPage() {
           ))}
 
           {filteredImages.length === 0 && (
-            <div className="gallery-empty">
-              当前分类下没有图片。
-            </div>
+            <div className="gallery-empty">当前分类下没有图片。</div>
           )}
         </section>
       </main>
-
-      <Footer />
 
       <style jsx>{`
         .gallery-page {
