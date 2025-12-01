@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 /**
- * Generation 表：存每一次 AI 生成 / 图像实验室处理的结果。
+ * Generation 表：记录每一次 AI 生成 / 图像实验室处理的结果
  *
  * 重要字段：
  *  - imageUrl: 前端 /history 用来展示缩略图 & 打开原图
@@ -20,7 +20,7 @@ const GenerationSchema = new Schema(
       type: String,
     },
     imageUrl: {
-      type: String, // ✅ 关键：必须在 schema 里声明，否则不会存进 MongoDB
+      type: String, // ✅ 关键字段：必须在 schema 里声明，否则不会进 MongoDB
     },
     result: {
       type: Schema.Types.Mixed,
