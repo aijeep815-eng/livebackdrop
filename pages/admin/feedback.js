@@ -1,31 +1,42 @@
 // pages/admin/feedback.js
-import React from "react";
-import { useRouter } from "next/router";
-import AdminLayout from "../../components/admin/AdminLayout";
-
-const textMap = {
-  en: {
-    title: "Feedback & Support",
-    desc: "Handle user feedback, bug reports and support tickets."
-  },
-  zh: {
-    title: "用户反馈与支持",
-    desc: "在这里处理用户反馈、Bug 报告和支持请求。"
-  },
-  es: {
-    title: "Comentarios y Soporte",
-    desc: "Gestiona aquí comentarios de usuarios, errores y soporte."
-  }
-};
+import Head from 'next/head';
+import { getSession } from 'next-auth/react';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 export default function AdminFeedbackPage() {
-  const { locale } = useRouter();
-  const t = textMap[locale] || textMap.en;
-
   return (
-    <AdminLayout title={t.title}>
-      <p className="text-sm text-gray-600">{t.desc}</p>
-      {/* TODO: 表单、工单系统 */}
-    </AdminLayout>
+    <>
+      <Head>
+        <title>用户反馈 - Admin - LiveBackdrop</title>
+      </Head>
+      <AdminLayout active="feedback">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">用户反馈</h1>
+            <p className="text-sm text-slate-600 mt-1">
+              在这里可以查看用户提交的功能建议、问题反馈，帮助你改进产品。
+            </p>
+          </div>
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+            <p className="text-sm text-slate-700">
+              当前为占位页面，主要用于统一后台布局和颜色。等你需要具体功能时，再在这里接入数据库或 Stripe 数据。
+            </p>
+          </div>
+        </div>
+      </AdminLayout>
+    </>
   );
+}
+
+export async function getServerSideProps(context) {
+  const session = await getSession(context);
+  if (!session || !session.user) {
+    return {
+      redirect: {
+        destination: '/auth/signin',
+        permanent: false,
+      },
+    };
+  }
+  return { props: {} };
 }

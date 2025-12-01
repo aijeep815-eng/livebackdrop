@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { getSession } from 'next-auth/react';
 import dbConnect from '../../lib/dbConnect';
 import DailyUsage from '../../models/DailyUsage';
+import AdminLayout from '../../components/admin/AdminLayout';
 
 function formatDate(dateStr) {
   if (!dateStr) return '未知';
@@ -24,66 +25,11 @@ function formatMoney(n) {
   return `$${n.toFixed(4)}`;
 }
 
-/**
- * 后台通用布局：左侧侧边栏 + 右侧内容
- * active 用来高亮当前菜单
- */
-function AdminLayout({ active, children }) {
-  const navItems = [
-    { key: 'dashboard', label: 'Dashboard', href: '/admin' },
-    { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
-    { key: 'users', label: 'Users', href: '/admin/users' },
-    { key: 'subscriptions', label: 'Subscriptions', href: '/admin/subscriptions' },
-    { key: 'backgrounds', label: 'Backgrounds', href: '/admin/backgrounds' },
-    { key: 'uploads', label: 'Uploads', href: '/admin/uploads' },
-    { key: 'feedback', label: 'Feedback', href: '/admin/feedback' },
-    { key: 'logs', label: 'Logs', href: '/admin/logs' },
-    { key: 'membership', label: 'Membership', href: '/admin/membership' },
-    { key: 'payments', label: 'Payments', href: '/admin/payments' },
-    // 新增的成本监控菜单
-    { key: 'costs', label: 'Costs', href: '/admin/costs' },
-    { key: 'settings', label: 'Settings', href: '/admin/settings' },
-  ];
-
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="flex min-h-screen">
-        {/* 左侧侧边栏 */}
-        <aside className="w-56 bg-white border-r border-slate-200 px-4 py-6">
-          <div className="mb-6">
-            <p className="text-[11px] font-semibold text-slate-400 tracking-wide uppercase">
-              Admin
-            </p>
-          </div>
-          <nav className="space-y-1">
-            {navItems.map((item) => {
-              const isActive = item.key === active;
-              return (
-                <a
-                  key={item.key}
-                  href={item.href}
-                  className={[
-                    'block rounded-xl px-3 py-2 text-sm',
-                    isActive
-                      ? 'bg-sky-100 text-sky-700 font-semibold'
-                      : 'text-slate-700 hover:bg-slate-100',
-                  ].join(' ')}
-                >
-                  {item.label}
-                </a>
-              );
-            })}
-          </nav>
-        </aside>
-
-        {/* 右侧主内容 */}
-        <main className="flex-1 px-6 py-8">{children}</main>
-      </div>
-    </div>
-  );
-}
-
-export default function AdminCostsPage({ summary, daily, isAdmin }) {
+export default function AdminCostsPage({
+  summary,
+  daily,
+  isAdmin,
+}) {
   return (
     <>
       <Head>
@@ -105,7 +51,6 @@ export default function AdminCostsPage({ summary, daily, isAdmin }) {
             )}
           </div>
 
-          {/* 顶部 3 个汇总卡片 */}
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-2">
               <p className="text-xs text-slate-500">今天（所有用户）</p>
@@ -136,9 +81,8 @@ export default function AdminCostsPage({ summary, daily, isAdmin }) {
             </div>
           </div>
 
-          {/* 每日明细表格 */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify_between">
               <h2 className="text-base font-semibold text-slate-900">
                 每日成本明细（最近 30 天）
               </h2>
@@ -247,7 +191,9 @@ export async function getServerSideProps(context) {
   const last30Start = new Date(todayStart);
   last30Start.setUTCDate(last30Start.getUTCDate() - 29);
 
-  const matchCondition = isAdmin ? {} : { user: session.user.id };
+  const matchCondition = isAdmin
+    ? {}
+    : { user: session.user.id };
 
   async function aggregateRange(from, to) {
     const cond = {
