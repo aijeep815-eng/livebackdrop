@@ -21,23 +21,19 @@ function formatDate(iso) {
   }
 }
 
-// 尽量从老数据里“猜”出图片地址
 function extractImageUrl(doc) {
   if (!doc || typeof doc !== 'object') return '';
 
-  // 最常见字段
   if (doc.imageUrl) return doc.imageUrl;
   if (doc.resultUrl) return doc.resultUrl;
   if (doc.url) return doc.url;
 
-  // 其它可能字段（早期版本可能用过）
   if (doc.image) return doc.image;
   if (doc.image_url) return doc.image_url;
   if (doc.fullUrl) return doc.fullUrl;
   if (doc.thumbnailUrl) return doc.thumbnailUrl;
   if (doc.previewUrl) return doc.previewUrl;
 
-  // 嵌套 data / result 结构
   if (doc.data) {
     if (doc.data.imageUrl) return doc.data.imageUrl;
     if (doc.data.url) return doc.data.url;
@@ -47,20 +43,54 @@ function extractImageUrl(doc) {
     if (doc.result.url) return doc.result.url;
   }
 
-  // 数组形式
   if (Array.isArray(doc.images) && doc.images.length > 0) {
     if (typeof doc.images[0] === 'string') return doc.images[0];
-    if (doc.images[0] && doc.images[0].url) return doc.images[0].url;
+    if (doc.images[0]?.url) return doc.images[0].url;
   }
   if (Array.isArray(doc.outputs) && doc.outputs.length > 0) {
     if (typeof doc.outputs[0] === 'string') return doc.outputs[0];
-    if (doc.outputs[0] && doc.outputs[0].url) return doc.outputs[0].url;
+    if (doc.outputs[0]?.url) return doc.outputs[0].url;
   }
 
   return '';
 }
 
 export default function HistoryPage({ items }) {
+  async function handleCopy(url) {
+    try {
+      if (!url) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url);
+        alert('图片链接已复制，可以粘贴给朋友或发到社交媒体。');
+      } else {
+        window.prompt('复制下面的链接：', url);
+      }
+    } catch (e) {
+      console.error('Copy failed', e);
+      window.prompt('复制下面的链接：', url);
+    }
+  }
+
+  async function handleWebShare(item) {
+    const url = item.imageUrl;
+    if (!url) return;
+    const text = item.prompt || 'LiveBackdrop 生成的虚拟背景';
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'LiveBackdrop 虚拟背景',
+          text,
+          url,
+        });
+      } catch (e) {
+        console.error('Web share failed', e);
+      }
+    } else {
+      handleCopy(url);
+    }
+  }
+
   return (
     <>
       <Head>
@@ -73,7 +103,7 @@ export default function HistoryPage({ items }) {
               AI 生成历史
             </h1>
             <p className="text-slate-600 text-sm mt-1">
-              这里会显示你最近生成的虚拟背景，方便你再次下载或对比效果。
+              这里会显示你最近生成的虚拟背景，方便你再次下载、分享或对比效果。
             </p>
           </div>
 
@@ -90,7 +120,6 @@ export default function HistoryPage({ items }) {
                   key={item.id}
                   className="bg-white rounded-2xl shadow border border-slate-200 flex flex-col overflow-hidden"
                 >
-                  {/* 缩略图区域 */}
                   <div className="aspect-video bg-slate-100 flex items-center justify-center overflow-hidden">
                     {item.imageUrl ? (
                       <img
@@ -105,7 +134,6 @@ export default function HistoryPage({ items }) {
                     )}
                   </div>
 
-                  {/* 文本信息区域 */}
                   <div className="flex-1 flex flex-col px-4 py-3 space-y-2">
                     <div className="text-xs text-slate-800 line-clamp-3">
                       {item.prompt || '（无提示词）'}
@@ -114,16 +142,40 @@ export default function HistoryPage({ items }) {
                       <p>时间：{formatDate(item.createdAt)}</p>
                       <p>来源：{item.source || 'unknown'}</p>
                     </div>
-                    <div className="mt-auto pt-2">
+
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {item.imageUrl && (
-                        <a
-                          href={item.imageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
-                        >
-                          打开原图
-                        </a>
+                        <>
+                          <a
+                            href={item.imageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex flex-1 items-center justify-center rounded-xl bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-blue-700"
+                          >
+                            打开原图
+                          </a>
+                          <a
+                            href={item.imageUrl}
+                            download
+                            className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-800 hover:bg-slate-50"
+                          >
+                            下载图片
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(item.imageUrl)}
+                            className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
+                          >
+                            复制链接
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleWebShare(item)}
+                            className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100"
+                          >
+                            分享给朋友
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -134,7 +186,7 @@ export default function HistoryPage({ items }) {
 
           <p className="text-[11px] text-slate-400 mt-4">
             说明：老版本生成的记录，有些当时没有把图片地址字段写进 Generation 表，这部分只能显示文字。
-            从现在开始，所有新生成的背景都会保存 imageUrl 字段并显示缩略图。
+            从现在开始，所有新生成的背景都会保存 imageUrl 字段并显示缩略图，你可以方便地下载和分享。
           </p>
         </div>
       </div>

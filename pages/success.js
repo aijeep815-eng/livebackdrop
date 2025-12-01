@@ -1,11 +1,36 @@
 import Head from 'next/head';
 import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 
 export default function SuccessPage() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshed, setRefreshed] = useState(false);
+
   const userName =
     session?.user?.name ||
     (session?.user?.email ? session.user.email.split('@')[0] : '创作者');
+
+  useEffect(() => {
+    async function doRefresh() {
+      try {
+        setRefreshing(true);
+        const res = await fetch('/api/auth/refresh');
+        if (res.ok) {
+          await fetch('/api/auth/session');
+          setRefreshed(true);
+        }
+      } catch (e) {
+        console.error('Failed to refresh session on success page:', e);
+      } finally {
+        setRefreshing(false);
+      }
+    }
+
+    if (status === 'authenticated' && !refreshed) {
+      doRefresh();
+    }
+  }, [status, refreshed]);
 
   return (
     <>
@@ -14,7 +39,6 @@ export default function SuccessPage() {
       </Head>
       <div className="min-h-screen bg-slate-50 py-12 px-4">
         <div className="max-w-3xl mx-auto space-y-8">
-          {/* 顶部成功提示条 */}
           <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 flex items-start gap-3">
             <div className="mt-0.5 text-emerald-500">✔</div>
             <div className="text-sm text-emerald-800 space-y-1">
@@ -24,10 +48,19 @@ export default function SuccessPage() {
               <p className="text-xs text-emerald-700">
                 从现在起，你可以无限生成 AI 虚拟背景、无限上传素材，并且图像实验室不限次数。
               </p>
+              {refreshing && (
+                <p className="text-[11px] text-emerald-600">
+                  正在刷新你的账号信息，请稍等 1 秒…
+                </p>
+              )}
+              {refreshed && (
+                <p className="text-[11px] text-emerald-600">
+                  已获取最新套餐信息，你右上角的账号状态应该已经更新为 CreatorUnlimited。
+                </p>
+              )}
             </div>
           </div>
 
-          {/* 主欢迎卡片 */}
           <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 p-8 space-y-6">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-2xl">
@@ -45,7 +78,6 @@ export default function SuccessPage() {
               </div>
             </div>
 
-            {/* 功能说明 */}
             <div className="grid sm:grid-cols-2 gap-4 text-sm text-slate-700">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 space-y-1">
                 <p className="font-semibold text-slate-900">
@@ -71,7 +103,6 @@ export default function SuccessPage() {
               </div>
             </div>
 
-            {/* 行动按钮区域 */}
             <div className="space-y-3">
               <p className="text-xs text-slate-500">
                 从哪一步开始？下面三个入口都是为你准备的：
@@ -91,7 +122,7 @@ export default function SuccessPage() {
                 </a>
                 <a
                   href="/profile"
-                  className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  className="inline-flex flex-1 items-center justify中心 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50"
                 >
                   查看我的套餐和使用统计
                 </a>
@@ -99,7 +130,6 @@ export default function SuccessPage() {
             </div>
           </div>
 
-          {/* 底部说明 */}
           <div className="text-[11px] text-slate-500 space-y-1">
             <p>
               你的订阅会按月自动续费，你可以在「用户中心 / Profile」中随时查看当前套餐，并在 Stripe 订阅中心取消或调整价格。
