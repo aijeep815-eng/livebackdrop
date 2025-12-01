@@ -1,3 +1,4 @@
+// pages/admin/costs.js
 import Head from 'next/head';
 import { getSession } from 'next-auth/react';
 import dbConnect from '../../lib/dbConnect';
@@ -23,18 +24,73 @@ function formatMoney(n) {
   return `$${n.toFixed(4)}`;
 }
 
-export default function AdminCostsPage({
-  summary,
-  daily,
-  isAdmin,
-}) {
+/**
+ * 后台通用布局：左侧侧边栏 + 右侧内容
+ * active 用来高亮当前菜单
+ */
+function AdminLayout({ active, children }) {
+  const navItems = [
+    { key: 'dashboard', label: 'Dashboard', href: '/admin' },
+    { key: 'analytics', label: 'Analytics', href: '/admin/analytics' },
+    { key: 'users', label: 'Users', href: '/admin/users' },
+    { key: 'subscriptions', label: 'Subscriptions', href: '/admin/subscriptions' },
+    { key: 'backgrounds', label: 'Backgrounds', href: '/admin/backgrounds' },
+    { key: 'uploads', label: 'Uploads', href: '/admin/uploads' },
+    { key: 'feedback', label: 'Feedback', href: '/admin/feedback' },
+    { key: 'logs', label: 'Logs', href: '/admin/logs' },
+    { key: 'membership', label: 'Membership', href: '/admin/membership' },
+    { key: 'payments', label: 'Payments', href: '/admin/payments' },
+    // 新增的成本监控菜单
+    { key: 'costs', label: 'Costs', href: '/admin/costs' },
+    { key: 'settings', label: 'Settings', href: '/admin/settings' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <div className="flex min-h-screen">
+        {/* 左侧侧边栏 */}
+        <aside className="w-56 bg-white border-r border-slate-200 px-4 py-6">
+          <div className="mb-6">
+            <p className="text-[11px] font-semibold text-slate-400 tracking-wide uppercase">
+              Admin
+            </p>
+          </div>
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const isActive = item.key === active;
+              return (
+                <a
+                  key={item.key}
+                  href={item.href}
+                  className={[
+                    'block rounded-xl px-3 py-2 text-sm',
+                    isActive
+                      ? 'bg-sky-100 text-sky-700 font-semibold'
+                      : 'text-slate-700 hover:bg-slate-100',
+                  ].join(' ')}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* 右侧主内容 */}
+        <main className="flex-1 px-6 py-8">{children}</main>
+      </div>
+    </div>
+  );
+}
+
+export default function AdminCostsPage({ summary, daily, isAdmin }) {
   return (
     <>
       <Head>
         <title>成本监控 - Admin - LiveBackdrop</title>
       </Head>
-      <div className="min-h-screen bg-slate-50 py-10 px-4">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <AdminLayout active="costs">
+        <div className="max-w-5xl mx-auto space-y-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
               成本监控（估算）
@@ -49,6 +105,7 @@ export default function AdminCostsPage({
             )}
           </div>
 
+          {/* 顶部 3 个汇总卡片 */}
           <div className="grid md:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-2">
               <p className="text-xs text-slate-500">今天（所有用户）</p>
@@ -79,6 +136,7 @@ export default function AdminCostsPage({
             </div>
           </div>
 
+          {/* 每日明细表格 */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900">
@@ -147,11 +205,12 @@ export default function AdminCostsPage({
           </div>
 
           <p className="text-[11px] text-slate-400">
-            说明：这里的成本是按固定单价粗略估算的（默认每张 {process.env.COST_PER_IMAGE_USD || '0.011'} 美元），
+            说明：这里的成本是按固定单价粗略估算的（默认每张{' '}
+            {process.env.COST_PER_IMAGE_USD || '0.011'} 美元），
             仅用于「心里有数」。真实账单以 OpenAI 控制台为准。
           </p>
         </div>
-      </div>
+      </AdminLayout>
     </>
   );
 }
@@ -168,8 +227,6 @@ export async function getServerSideProps(context) {
     };
   }
 
-  // 简单的“管理员判断”：如果设置了 ADMIN_EMAIL，则只有该邮箱能看全站数据；
-  // 否则默认当前用户就是管理员。
   const adminEmail = process.env.ADMIN_EMAIL;
   const isAdmin =
     !adminEmail ||
@@ -190,11 +247,8 @@ export async function getServerSideProps(context) {
   const last30Start = new Date(todayStart);
   last30Start.setUTCDate(last30Start.getUTCDate() - 29);
 
-  const matchCondition = isAdmin
-    ? {}
-    : { user: session.user.id };
+  const matchCondition = isAdmin ? {} : { user: session.user.id };
 
-  // 统计函数
   async function aggregateRange(from, to) {
     const cond = {
       ...matchCondition,
