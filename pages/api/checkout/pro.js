@@ -21,14 +21,36 @@ const stripe = stripeSecretKey
   : null;
 
 export default async function handler(req, res) {
+  // 临时加一个 GET 调试接口，方便你在浏览器里直接看配置状态
+  if (req.method === "GET") {
+    try {
+      const session = await getServerSession(req, res, authOptions);
+      return res.status(200).json({
+        ok: true,
+        method: "GET",
+        hasStripeSecretKey: !!stripeSecretKey,
+        hasPriceId: !!priceId,
+        stripeConfigured: !!stripe && !!priceId,
+        loggedIn: !!session,
+        sessionEmail: session?.user?.email || null,
+      });
+    } catch (e) {
+      return res.status(200).json({
+        ok: false,
+        error: "GET debug failed",
+        details: e?.message || String(e),
+      });
+    }
+  }
+
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader("Allow", "GET, POST");
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   if (!stripe || !priceId) {
     return res.status(500).json({
-      error: "Stripe not configured. Please set STRIPE_SECRET_KEY and STRIPE_PRICE_ID_CREATOR.",
+      error: "Stripe not configured. Please set STRIPE_SECRET_KEY and STRIPE_PRICE_ID_CREATOR (or STRIPE_PRICE_ID).",
     });
   }
 
@@ -36,14 +58,14 @@ export default async function handler(req, res) {
     const session = await getServerSession(req, res, authOptions);
 
     if (!session || !session.user || !session.user.email) {
-      return res.status(401).json({ error: "Not authenticated" });
+      return res.status(401).json({ error: "Not authenticated (no NextAuth session)" });
     }
 
     await dbConnect();
     const user = await User.findOne({ email: session.user.email });
 
     if (!user) {
-      return res.status(404).json({ error: "User not found in database" });
+      return res.status(404).json({ error: "User not found in database for this email" });
     }
 
     const origin =
@@ -85,6 +107,7 @@ export default async function handler(req, res) {
     console.error("Error in /api/checkout/pro:", err);
     return res.status(500).json({
       error: "Failed to create Stripe checkout session.",
+      details: err.message || String(err),
     });
   }
 }
