@@ -1,3 +1,4 @@
+
 import Head from 'next/head';
 import { getSession } from 'next-auth/react';
 import dbConnect from '../lib/dbConnect';
@@ -21,39 +22,72 @@ function formatDate(iso) {
   }
 }
 
+// 尽可能从各种字段中推断出一个图片地址
 function extractImageUrl(doc) {
   if (!doc || typeof doc !== 'object') return '';
 
+  // 顶层常见字段
   if (doc.thumbnailUrl) return doc.thumbnailUrl;
+  if (doc.thumbUrl) return doc.thumbUrl;
+  if (doc.previewUrl) return doc.previewUrl;
+
   if (doc.imageUrl) return doc.imageUrl;
   if (doc.resultUrl) return doc.resultUrl;
+  if (doc.cloudinaryUrl) return doc.cloudinaryUrl;
   if (doc.url) return doc.url;
 
   if (doc.image) return doc.image;
   if (doc.image_url) return doc.image_url;
   if (doc.fullUrl) return doc.fullUrl;
-  if (doc.previewUrl) return doc.previewUrl;
 
-  if (doc.data) {
+  // cloudinary 嵌套结构
+  if (doc.cloudinary) {
+    if (doc.cloudinary.secure_url) return doc.cloudinary.secure_url;
+    if (doc.cloudinary.url) return doc.cloudinary.url;
+  }
+
+  // data 子对象
+  if (doc.data && typeof doc.data === 'object') {
     if (doc.data.thumbnailUrl) return doc.data.thumbnailUrl;
+    if (doc.data.thumbUrl) return doc.data.thumbUrl;
+    if (doc.data.previewUrl) return doc.data.previewUrl;
     if (doc.data.imageUrl) return doc.data.imageUrl;
+    if (doc.data.cloudinaryUrl) return doc.data.cloudinaryUrl;
     if (doc.data.url) return doc.data.url;
   }
-  if (doc.result) {
+
+  // result 子对象
+  if (doc.result && typeof doc.result === 'object') {
     if (doc.result.thumbnailUrl) return doc.result.thumbnailUrl;
+    if (doc.result.thumbUrl) return doc.result.thumbUrl;
+    if (doc.result.previewUrl) return doc.result.previewUrl;
     if (doc.result.imageUrl) return doc.result.imageUrl;
+    if (doc.result.cloudinaryUrl) return doc.result.cloudinaryUrl;
     if (doc.result.url) return doc.result.url;
   }
 
+  // images 数组
   if (Array.isArray(doc.images) && doc.images.length > 0) {
-    if (typeof doc.images[0] === 'string') return doc.images[0];
-    if (doc.images[0]?.thumbnailUrl) return doc.images[0].thumbnailUrl;
-    if (doc.images[0]?.url) return doc.images[0].url;
+    const first = doc.images[0];
+    if (typeof first === 'string') return first;
+    if (first.thumbnailUrl) return first.thumbnailUrl;
+    if (first.thumbUrl) return first.thumbUrl;
+    if (first.previewUrl) return first.previewUrl;
+    if (first.imageUrl) return first.imageUrl;
+    if (first.cloudinaryUrl) return first.cloudinaryUrl;
+    if (first.url) return first.url;
   }
+
+  // outputs 数组
   if (Array.isArray(doc.outputs) && doc.outputs.length > 0) {
-    if (typeof doc.outputs[0] === 'string') return doc.outputs[0];
-    if (doc.outputs[0]?.thumbnailUrl) return doc.outputs[0].thumbnailUrl;
-    if (doc.outputs[0]?.url) return doc.outputs[0].url;
+    const first = doc.outputs[0];
+    if (typeof first === 'string') return first;
+    if (first.thumbnailUrl) return first.thumbnailUrl;
+    if (first.thumbUrl) return first.thumbUrl;
+    if (first.previewUrl) return first.previewUrl;
+    if (first.imageUrl) return first.imageUrl;
+    if (first.cloudinaryUrl) return first.cloudinaryUrl;
+    if (first.url) return first.url;
   }
 
   return '';
