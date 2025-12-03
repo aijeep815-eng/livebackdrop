@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../auth/[...nextauth]";
+import { authOptions } from "../auth/[...nextauth]";
 import dbConnect from "../../../lib/dbConnect";
 import User from "../../../models/User";
 
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     await dbConnect();
     const user = await User.findOne({ email: session.user.email });
 
-    if (user?.subscriptionPlan === "creator")
+    if (user?.subscriptionPlan === "creator" || user?.plan === "creator")
       return res
         .status(400)
         .json({ error: "Already upgraded. Cannot upgrade again." });
