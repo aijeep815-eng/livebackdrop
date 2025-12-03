@@ -24,6 +24,7 @@ function formatDate(iso) {
 function extractImageUrl(doc) {
   if (!doc || typeof doc !== 'object') return '';
 
+  if (doc.thumbnailUrl) return doc.thumbnailUrl;
   if (doc.imageUrl) return doc.imageUrl;
   if (doc.resultUrl) return doc.resultUrl;
   if (doc.url) return doc.url;
@@ -31,24 +32,27 @@ function extractImageUrl(doc) {
   if (doc.image) return doc.image;
   if (doc.image_url) return doc.image_url;
   if (doc.fullUrl) return doc.fullUrl;
-  if (doc.thumbnailUrl) return doc.thumbnailUrl;
   if (doc.previewUrl) return doc.previewUrl;
 
   if (doc.data) {
+    if (doc.data.thumbnailUrl) return doc.data.thumbnailUrl;
     if (doc.data.imageUrl) return doc.data.imageUrl;
     if (doc.data.url) return doc.data.url;
   }
   if (doc.result) {
+    if (doc.result.thumbnailUrl) return doc.result.thumbnailUrl;
     if (doc.result.imageUrl) return doc.result.imageUrl;
     if (doc.result.url) return doc.result.url;
   }
 
   if (Array.isArray(doc.images) && doc.images.length > 0) {
     if (typeof doc.images[0] === 'string') return doc.images[0];
+    if (doc.images[0]?.thumbnailUrl) return doc.images[0].thumbnailUrl;
     if (doc.images[0]?.url) return doc.images[0].url;
   }
   if (Array.isArray(doc.outputs) && doc.outputs.length > 0) {
     if (typeof doc.outputs[0] === 'string') return doc.outputs[0];
+    if (doc.outputs[0]?.thumbnailUrl) return doc.outputs[0].thumbnailUrl;
     if (doc.outputs[0]?.url) return doc.outputs[0].url;
   }
 
@@ -126,6 +130,7 @@ export default function HistoryPage({ items }) {
                         src={item.imageUrl}
                         alt={item.prompt || '生成结果'}
                         className="w-full h-full object-cover"
+                        loading="lazy"
                       />
                     ) : (
                       <span className="text-xs text-slate-400 px-3 text-center">
